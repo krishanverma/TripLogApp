@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truck Log Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen pb-10">
+
+    <div class="max-w-3xl mx-auto p-4">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="bg-blue-800 p-6 text-white text-center">
+                <h1 class="text-3xl font-bold tracking-tight">TRUCK LOG PRO</h1>
+                <p class="text-blue-200 text-sm">USA & Canada Trip Manager</p>
+            </div>
+
+            <!-- Settings (Collapsible) -->
+            <details class="bg-gray-50 border-b">
+                <summary class="p-3 text-xs text-gray-500 cursor-pointer hover:bg-gray-100 uppercase font-bold text-center">
+                    Connection Settings (Setup Once)
+                </summary>
+                <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">GitHub Personal Token</label>
+                        <input type="password" id="ghToken" class="w-full p-2 border rounded text-sm" placeholder="ghp_xxxxxxxx">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Data Repo (User/Repo)</label>
+                        <input type="text" id="ghRepo" class="w-full p-2 border rounded text-sm" placeholder="yourname/my-trip-data">
+                    </div>
+                    <button onclick="saveSettings()" class="md:col-span-2 bg-gray-800 text-white py-2 rounded font-bold hover:bg-black transition">
+                        Save & Sync Connection
+                    </button>
+                </div>
+            </details>
+
+            <!-- Form Section -->
+            <form id="tripForm" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2 border-b pb-2 mb-2 font-bold text-blue-800">Trip Info</div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium">Order #</label>
+                    <input type="text" id="order_number" required class="mt-1 block w-full border rounded-md p-2 bg-blue-50">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-green-700">Pickup Date</label>
+                    <input type="date" id="pickup_date" required class="mt-1 block w-full border rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-green-700">Pickup City</label>
+                    <input type="text" id="pickup_city" required placeholder="City, State/Prov" class="mt-1 block w-full border rounded-md p-2">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-red-700">Delivery Date</label>
+                    <input type="date" id="delivery_date" required class="mt-1 block w-full border rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-red-700">Delivery City</label>
+                    <input type="text" id="delivery_city" required placeholder="City, State/Prov" class="mt-1 block w-full border rounded-md p-2">
+                </div>
+
+                <div class="md:col-span-2 border-b pb-2 mb-2 mt-4 font-bold text-blue-800">Equipment</div>
+
+                <div>
+                    <label class="block text-sm font-medium">Truck ID</label>
+                    <input type="text" id="truck" required class="mt-1 block w-full border rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Trailer #</label>
+                    <input type="text" id="trailer" required class="mt-1 block w-full border rounded-md p-2">
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="tarp" class="w-5 h-5">
+                    <label class="text-sm font-medium">Tarp Required</label>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Co-driver</label>
+                    <input type="text" id="co_driver" placeholder="None" class="mt-1 block w-full border rounded-md p-2">
+                </div>
+
+                <button type="submit" id="saveBtn" class="md:col-span-2 mt-4 bg-blue-600 text-white font-black py-4 rounded-lg shadow-md hover:bg-blue-700 active:scale-95 transition">
+                    SAVE TRIP TO CLOUD
+                </button>
+            </form>
+
+            <!-- Export Tools -->
+            <div class="p-6 bg-gray-50 border-t flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="text-sm font-bold text-gray-600">EXPORT LOGS TO PDF</div>
+                <div class="flex gap-2">
+                    <input type="month" id="exportMonth" class="p-2 border rounded text-sm">
+                    <button onclick="exportToPDF()" class="bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700">
+                        GENERATE PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Setup Libraries
+        window.jsPDF = window.jspdf.jsPDF;
+
+        // Load Saved Settings
+        document.getElementById('ghToken').value = localStorage.getItem('gh_token') || '';
+        document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
+
+        function saveSettings() {
+            localStorage.setItem('gh_token', document.getElementById('ghToken').value);
+            localStorage.setItem('gh_repo', document.getElementById('ghRepo').value);
+            alert("Settings Locked In!");
+        }
+
+        const form = document.getElementById('tripForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerText = "UPLOADING TO GITHUB...";
+
+            const newTrip = {
+                id: Date.now(),
+                order: document.getElementById('order_number').value,
+                pDate: document.getElementById('pickup_date').value,
+                pCity: document.getElementById('pickup_city').value,
+                dDate: document.getElementById('delivery_date').value,
+                dCity: document.getElementById('delivery_city').value,
+                truck: document.getElementById('truck').value,
+                trailer: document.getElementById('trailer').value,
+                tarp: document.getElementById('tarp').checked ? "YES" : "NO",
+                codriver: document.getElementById('co_driver').value || "N/A"
+            };
+
+            const token = localStorage.getItem('gh_token');
+            const repo = localStorage.getItem('gh_repo');
+            
+            try {
+                // Fetch existing trips.json
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                const fileData = await res.json();
+                const trips = JSON.parse(atob(fileData.content));
+
+                // Add new data
+                trips.push(newTrip);
+
+                // Save back to GitHub
+                await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: `Trip log ${newTrip.order}`,
+                        content: btoa(JSON.stringify(trips, null, 2)),
+                        sha: fileData.sha
+                    })
+                });
+
+                alert("Trip Saved Successfully!");
+                form.reset();
+            } catch (err) {
+                alert("Error! Check your token/repo settings.");
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "SAVE TRIP TO CLOUD";
+            }
+        });
+
+        async function exportToPDF() {
+            const selectedMonth = document.getElementById('exportMonth').value;
+            if(!selectedMonth) return alert("Select a month first!");
+
+            const token = localStorage.getItem('gh_token');
+            const repo = localStorage.getItem('gh_repo');
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                const fileData = await res.json();
+                const trips = JSON.parse(atob(fileData.content));
+
+                // Filter data for the chosen month
+                const filtered = trips.filter(t => t.pDate.startsWith(selectedMonth));
+
+                if(filtered.length === 0) return alert("No trips found for this month!");
+
+                const doc = new jsPDF();
+                doc.setFontSize(18);
+                doc.text(`TRUCK LOG REPORT: ${selectedMonth}`, 14, 20);
+                
+                const tableData = filtered.map(t => [
+                    t.order, t.pDate, t.pCity, t.dDate, t.dCity, t.truck, t.tarp
+                ]);
+
+                doc.autoTable({
+                    startY: 30,
+                    head: [['Order #', 'Pickup', 'From', 'Delivery', 'To', 'Truck', 'Tarp']],
+                    body: tableData,
+                    theme: 'striped',
+                    headStyles: { fillColor: [30, 58, 138] }
+                });
+
+                doc.save(`Trip-Log-${selectedMonth}.pdf`);
+            } catch (err) {
+                alert("Failed to load data for PDF.");
+            }
+        }
+    </script>
+</body>
+</html>
