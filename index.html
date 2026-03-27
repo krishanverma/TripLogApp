@@ -8,13 +8,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen pb-20 font-sans">
+<body class="bg-gray-100 min-h-screen pb-20 font-sans text-gray-900">
 
     <div class="max-w-3xl mx-auto p-4">
         <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
             <div class="bg-blue-900 p-6 text-white text-center">
-                <h1 class="text-3xl font-black tracking-tighter italic">TRUCK LOG PRO</h1>
-                <div id="connectionStatus" class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-800 text-gray-300">
+                <h1 class="text-3xl font-black tracking-tighter italic uppercase">Truck Log Pro</h1>
+                <div id="connectionStatus" class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-800 text-gray-300 border border-gray-600">
                     <span id="statusDot" class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
                     <span id="statusText">WAITING FOR SETTINGS</span>
                 </div>
@@ -35,18 +35,18 @@
                             <input type="text" id="ghRepo" class="w-full p-2 border rounded text-sm shadow-inner" placeholder="username/my-trip-data">
                         </div>
                     </div>
-                    <button onclick="testAndSaveSettings()" id="testBtn" class="w-full bg-black text-white py-3 rounded font-bold hover:bg-gray-800 transition uppercase tracking-widest">
+                    <button onclick="testAndSaveSettings()" id="testBtn" class="w-full bg-black text-white py-3 rounded font-bold hover:bg-gray-800 transition uppercase tracking-widest text-xs">
                         Verify & Link Account
                     </button>
                 </div>
             </details>
 
             <form id="tripForm" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="md:col-span-2 border-l-4 border-blue-900 pl-2 mb-2 font-black text-blue-900 uppercase text-sm tracking-widest">New Entry</div>
+                <div class="md:col-span-2 border-l-4 border-blue-900 pl-2 mb-2 font-black text-blue-900 uppercase text-sm tracking-widest">Load Entry</div>
                 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-gray-500 uppercase">Order Number</label>
-                    <input type="text" id="order_number" required class="w-full border-b-2 border-gray-200 focus:border-blue-600 outline-none py-2 text-xl font-bold uppercase placeholder-gray-300" placeholder="LOAD-555">
+                    <input type="text" id="order_number" required class="w-full border-b-2 border-gray-200 focus:border-blue-600 outline-none py-2 text-xl font-bold uppercase placeholder-gray-300">
                 </div>
 
                 <div>
@@ -67,7 +67,7 @@
                     <input type="text" id="delivery_city" required placeholder="Toronto, ON" class="w-full border rounded p-3 mt-1">
                 </div>
 
-                <div class="md:col-span-2 border-l-4 border-gray-400 pl-2 mb-2 mt-4 font-black text-gray-600 uppercase text-sm tracking-widest">Equipment</div>
+                <div class="md:col-span-2 border-l-4 border-gray-400 pl-2 mb-2 mt-4 font-black text-gray-600 uppercase text-sm tracking-widest text-xs">Equipment Details</div>
 
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase">Truck ID</label>
@@ -78,12 +78,26 @@
                     <input type="text" id="trailer" required class="w-full border rounded p-3 mt-1">
                 </div>
 
-                <div class="flex items-center space-x-2 bg-gray-50 p-3 rounded border">
-                    <input type="checkbox" id="tarp" class="w-6 h-6 border-gray-300 rounded">
-                    <label class="text-sm font-bold text-gray-700 uppercase">Tarp Required</label>
+                <div class="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200 mt-2">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-3 tracking-widest">Tarp Type</label>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center space-x-2 cursor-pointer group">
+                            <input type="radio" name="tarp_type" value="None" checked class="w-5 h-5 text-blue-600">
+                            <span class="text-sm font-bold text-gray-700 group-hover:text-blue-600 uppercase">None</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer group">
+                            <input type="radio" name="tarp_type" value="Steel" class="w-5 h-5 text-blue-600">
+                            <span class="text-sm font-bold text-gray-700 group-hover:text-blue-600 uppercase">Steel</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer group">
+                            <input type="radio" name="tarp_type" value="Lumber" class="w-5 h-5 text-blue-600">
+                            <span class="text-sm font-bold text-gray-700 group-hover:text-blue-600 uppercase">Lumber</span>
+                        </label>
+                    </div>
                 </div>
+
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase font-mono">Co-driver Name</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase">Co-driver Name</label>
                     <input type="text" id="co_driver" placeholder="Solo" class="w-full border rounded p-3 mt-1">
                 </div>
 
@@ -95,26 +109,26 @@
             <div class="bg-gray-100 p-6 border-t border-b">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-sm font-black text-gray-600 uppercase tracking-widest">Recent Logs</h2>
-                    <button onclick="fetchHistory()" class="text-[10px] bg-white border px-2 py-1 rounded shadow-sm hover:bg-gray-50 uppercase font-bold text-gray-500">Refresh History</button>
+                    <button onclick="fetchHistory()" class="text-[10px] bg-white border px-2 py-1 rounded shadow-sm hover:bg-gray-50 uppercase font-bold text-gray-500">Refresh</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs bg-white border rounded shadow-sm">
                         <thead class="bg-gray-200 font-black">
                             <tr>
                                 <th class="p-2 border-b">Order</th>
-                                <th class="p-2 border-b">Pickup</th>
                                 <th class="p-2 border-b">Destination</th>
+                                <th class="p-2 border-b">Tarp</th>
                             </tr>
                         </thead>
                         <tbody id="historyBody">
-                            <tr><td colspan="3" class="p-4 text-center text-gray-400">Save a trip to see history...</td></tr>
+                            <tr><td colspan="3" class="p-4 text-center text-gray-400 italic">No trips found...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div class="p-6 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
-                <span class="text-xs font-black text-blue-900 uppercase tracking-widest">Generate Monthly PDF</span>
+                <span class="text-xs font-black text-blue-900 uppercase tracking-widest">Monthly PDF</span>
                 <div class="flex w-full sm:w-auto gap-2">
                     <input type="month" id="exportMonth" class="flex-1 p-2 border rounded font-bold text-sm bg-gray-50">
                     <button onclick="exportToPDF()" class="bg-red-600 text-white px-8 py-2 rounded font-black hover:bg-red-700 uppercase text-sm shadow-md">Export</button>
@@ -126,7 +140,6 @@
     <script>
         window.jsPDF = window.jspdf.jsPDF;
 
-        // Auto-load on startup
         window.onload = () => {
             const token = localStorage.getItem('gh_token');
             const repo = localStorage.getItem('gh_repo');
@@ -157,13 +170,13 @@
                     statusText.innerText = "CLOUD CONNECTED";
                     fetchHistory();
                     if(!isSilent) {
-                        alert("✅ SUCCESS: Linked to " + repo);
+                        alert("✅ SUCCESS: Linked to GitHub");
                         document.getElementById('settingsDetails').open = false;
                     }
-                } else { throw new Error("Invalid Repo/Token"); }
+                } else { throw new Error("Invalid Settings"); }
             } catch (err) {
                 statusDot.className = "w-2 h-2 rounded-full bg-red-500 mr-2";
-                statusText.innerText = "CONNECTION FAILED";
+                statusText.innerText = "DISCONNECTED";
             }
         }
 
@@ -171,7 +184,6 @@
             const token = localStorage.getItem('gh_token');
             const repo = localStorage.getItem('gh_repo');
             const body = document.getElementById('historyBody');
-            
             if(!token || !repo) return;
 
             try {
@@ -180,20 +192,18 @@
                 });
                 const fileData = await res.json();
                 const trips = JSON.parse(atob(fileData.content));
-                
-                // Get last 5 trips, reversed so newest is on top
                 const recent = trips.slice(-5).reverse();
                 
                 if(recent.length > 0) {
                     body.innerHTML = recent.map(t => `
                         <tr class="hover:bg-blue-50 transition border-b">
                             <td class="p-2 font-bold">${t.order}</td>
-                            <td class="p-2">${t.pDate}</td>
-                            <td class="p-2 text-gray-600">${t.dCity}</td>
+                            <td class="p-2">${t.dCity}</td>
+                            <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.tarp === 'None' ? 'bg-gray-200' : 'bg-blue-100 text-blue-800'} uppercase">${t.tarp}</span></td>
                         </tr>
                     `).join('');
                 }
-            } catch (e) { console.error("History fetch failed"); }
+            } catch (e) { console.error("History failed"); }
         }
 
         document.getElementById('tripForm').addEventListener('submit', async (e) => {
@@ -203,7 +213,7 @@
             const repo = localStorage.getItem('gh_repo');
 
             btn.disabled = true;
-            btn.innerText = "UPLOADING LOAD DATA...";
+            btn.innerText = "UPLOADING...";
 
             try {
                 const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
@@ -211,6 +221,9 @@
                 });
                 const fileData = await res.json();
                 const trips = JSON.parse(atob(fileData.content));
+
+                // Get selected radio button value
+                const tarpValue = document.querySelector('input[name="tarp_type"]:checked').value;
 
                 const newTrip = {
                     order: document.getElementById('order_number').value.toUpperCase(),
@@ -220,7 +233,7 @@
                     dCity: document.getElementById('delivery_city').value,
                     truck: document.getElementById('truck').value,
                     trailer: document.getElementById('trailer').value,
-                    tarp: document.getElementById('tarp').checked ? "YES" : "NO",
+                    tarp: tarpValue,
                     codriver: document.getElementById('co_driver').value || "SOLO"
                 };
 
@@ -230,17 +243,17 @@
                     method: 'PUT',
                     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: `Logged ${newTrip.order}`,
+                        message: `Log ${newTrip.order}`,
                         content: btoa(JSON.stringify(trips, null, 2)),
                         sha: fileData.sha
                     })
                 });
 
-                alert("✅ LOGGED SUCCESSFULLY");
+                alert("✅ SAVED TO CLOUD");
                 document.getElementById('tripForm').reset();
                 fetchHistory();
             } catch (err) {
-                alert("❌ ERROR SAVING: " + err.message);
+                alert("❌ ERROR: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "SEND TO CLOUD";
@@ -251,7 +264,6 @@
             const month = document.getElementById('exportMonth').value;
             const token = localStorage.getItem('gh_token');
             const repo = localStorage.getItem('gh_repo');
-
             if(!month) return alert("Select Month First");
 
             try {
@@ -267,9 +279,7 @@
                 const doc = new jsPDF('l', 'mm', 'a4');
                 doc.setFontSize(22);
                 doc.setTextColor(0, 51, 102);
-                doc.text("TRUCK LOG REPORT", 14, 20);
-                doc.setFontSize(12);
-                doc.text(`Period: ${month}`, 14, 28);
+                doc.text("TRUCK TRIP LOG REPORT", 14, 20);
                 
                 const tableData = filtered.map(t => [
                     t.order, t.pDate, t.pCity, t.dDate, t.dCity, t.truck, t.trailer, t.tarp, t.codriver
@@ -279,11 +289,10 @@
                     startY: 35,
                     head: [['ORDER #', 'PICKUP', 'FROM', 'DELIVERY', 'TO', 'TRUCK', 'TRAILER', 'TARP', 'CREW']],
                     body: tableData,
-                    headStyles: { fillColor: [0, 51, 102], fontSize: 10 },
-                    styles: { fontSize: 9 }
+                    headStyles: { fillColor: [0, 51, 102] }
                 });
 
-                doc.save(`TruckLog_${month}.pdf`);
+                doc.save(`TripReport_${month}.pdf`);
             } catch (e) { alert("PDF Error"); }
         }
     </script>
