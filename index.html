@@ -6,10 +6,7 @@
     <title>Truck Log Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Tailwind configuration for Dark Mode
-        tailwind.config = {
-            darkMode: 'class',
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -24,7 +21,7 @@
                     <h1 class="text-2xl font-black tracking-tighter italic uppercase text-blue-400">Truck Log Pro</h1>
                     <div id="connectionStatus" class="mt-1 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
                         <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-2"></span>
-                        <span id="statusText uppercase">OFFLINE</span>
+                        <span id="statusText">SYSTEM OFFLINE</span>
                     </div>
                 </div>
                 <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all border border-slate-700 shadow-inner">
@@ -34,45 +31,41 @@
 
             <details class="bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-800" id="settingsDetails">
                 <summary class="p-3 text-[10px] text-slate-500 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 uppercase font-black text-center tracking-widest">
-                    System Configuration
+                    Manual Connection Override
                 </summary>
                 <div class="p-4 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[10px] font-black text-slate-500 uppercase">Access Token</label>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase">Personal Token</label>
                             <input type="password" id="ghToken" class="w-full p-2 border dark:border-slate-700 rounded text-sm bg-white dark:bg-slate-900 shadow-inner" placeholder="ghp_xxxxxxxx">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black text-slate-500 uppercase">Target Repository</label>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase">Data Repository</label>
                             <input type="text" id="ghRepo" class="w-full p-2 border dark:border-slate-700 rounded text-sm bg-white dark:bg-slate-900 shadow-inner" placeholder="user/repo">
                         </div>
                     </div>
-                    <button onclick="testAndSaveSettings()" id="testBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-black transition uppercase tracking-widest text-[10px]">
-                        Sync Database
+                    <button onclick="testAndSaveSettings()" id="testBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded font-black transition uppercase tracking-widest text-[10px]">
+                        Verify & Reconnect
                     </button>
                 </div>
             </details>
 
             <form id="tripForm" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2 border-l-4 border-blue-500 pl-3 mb-2">
-                    <label class="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Log Identifier</label>
-                    <input type="text" id="order_number" required class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 outline-none py-2 text-2xl font-black uppercase placeholder-slate-300 dark:placeholder-slate-700">
+                    <label class="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Order Identifier</label>
+                    <input type="text" id="order_number" required class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 outline-none py-2 text-2xl font-black uppercase">
                 </div>
 
-                <div class="space-y-4">
-                    <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border dark:border-slate-800">
-                        <label class="block text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2">Pickup Details</label>
-                        <input type="date" id="pickup_date" required class="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded p-2 mb-2 font-bold text-sm">
-                        <input type="text" id="pickup_city" required placeholder="Origin City, Prov/State" class="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded p-2 text-sm">
-                    </div>
+                <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border dark:border-slate-800">
+                    <label class="block text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2">Pickup</label>
+                    <input type="date" id="pickup_date" required class="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded p-2 mb-2 font-bold text-sm">
+                    <input type="text" id="pickup_city" required placeholder="Origin City, Prov/State" class="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded p-2 text-sm">
                 </div>
 
-                <div class="space-y-4">
-                    <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border dark:border-slate-800">
-                        <label class="block text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-2">Delivery Details</label>
-                        <input type="date" id="delivery_date" required class="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded p-2 mb-2 font-bold text-sm">
-                        <input type="text" id="delivery_city" required placeholder="Dest City, Prov/State" class="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded p-2 text-sm">
-                    </div>
+                <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border dark:border-slate-800">
+                    <label class="block text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-2">Delivery</label>
+                    <input type="date" id="delivery_date" required class="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded p-2 mb-2 font-bold text-sm">
+                    <input type="text" id="delivery_city" required placeholder="Dest City, Prov/State" class="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded p-2 text-sm">
                 </div>
 
                 <div class="md:col-span-2 grid grid-cols-2 gap-4">
@@ -113,25 +106,25 @@
                 </div>
 
                 <button type="submit" id="saveBtn" class="md:col-span-2 mt-4 bg-blue-600 text-white font-black py-4 rounded-lg shadow-xl hover:bg-blue-500 active:scale-95 transition-all text-lg uppercase tracking-widest border-b-4 border-blue-800">
-                    Commit to Cloud
+                    Submit Log Entry
                 </button>
             </form>
 
             <div class="bg-slate-50 dark:bg-slate-950 p-6 border-t dark:border-slate-800">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recent Fleet Logs</h2>
-                    <button onclick="fetchHistory()" class="text-[10px] text-blue-500 font-bold uppercase hover:underline">Sync Now</button>
+                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Fleet Feed</h2>
+                    <button onclick="fetchHistory()" class="text-[10px] text-blue-500 font-bold uppercase hover:underline">Refresh</button>
                 </div>
                 <div class="space-y-2" id="historyBody">
-                    <p class="text-center text-xs text-slate-500 py-4 italic">No logs detected...</p>
+                    <p class="text-center text-xs text-slate-500 py-4 italic">Connecting...</p>
                 </div>
             </div>
 
             <div class="p-6 bg-white dark:bg-slate-900 border-t dark:border-slate-800 flex flex-col sm:flex-row items-center gap-4">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Archive Export</span>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reporting</span>
                 <div class="flex flex-1 w-full gap-2">
                     <input type="month" id="exportMonth" class="flex-1 p-2 border dark:border-slate-700 rounded font-bold text-xs bg-slate-50 dark:bg-slate-900 shadow-inner">
-                    <button onclick="exportToPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-6 py-2 rounded font-black uppercase text-xs shadow-lg transition-colors">Generate PDF</button>
+                    <button onclick="exportToPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-6 py-2 rounded font-black uppercase text-xs shadow-lg transition-colors">PDF Export</button>
                 </div>
             </div>
         </div>
@@ -140,7 +133,6 @@
     <script>
         window.jsPDF = window.jspdf.jsPDF;
 
-        // Dark Mode Logic
         function toggleDarkMode() {
             const html = document.documentElement;
             const icon = document.getElementById('themeIcon');
@@ -155,8 +147,8 @@
             }
         }
 
-        // Initialize Theme
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        // Initialize Theme properly
+        if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
             document.getElementById('themeIcon').innerText = '☀️';
         }
@@ -181,20 +173,29 @@
 
             try {
                 const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
-                    headers: { 'Authorization': `token ${token}` }
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
 
                 if(res.ok) {
                     localStorage.setItem('gh_token', token);
                     localStorage.setItem('gh_repo', repo);
-                    dot.className = "w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse";
-                    txt.innerText = "ONLINE";
+                    dot.style.backgroundColor = '#3b82f6'; // Blue-500
+                    dot.classList.add('animate-pulse');
+                    txt.innerText = "LINKED & ONLINE";
                     fetchHistory();
-                    if(!isSilent) document.getElementById('settingsDetails').open = false;
-                } else { throw new Error(); }
+                    if(!isSilent) {
+                        alert("Connection Verified!");
+                        document.getElementById('settingsDetails').open = false;
+                    }
+                } else {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || "Failed to find repo");
+                }
             } catch (err) {
-                dot.className = "w-1.5 h-1.5 rounded-full bg-rose-600 mr-2";
-                txt.innerText = "ERROR";
+                dot.style.backgroundColor = '#e11d48'; // Rose-600
+                dot.classList.remove('animate-pulse');
+                txt.innerText = "LINK FAILED";
+                if(!isSilent) alert("Connection Error: " + err.message);
             }
         }
 
@@ -221,12 +222,16 @@
                             </div>
                             <div class="text-right">
                                 <div class="text-[10px] font-bold text-slate-400">${t.pDate}</div>
-                                <div class="text-[8px] px-1 bg-slate-100 dark:bg-slate-800 rounded inline-block font-black">${t.tarp}</div>
+                                <div class="text-[8px] px-1 bg-slate-100 dark:bg-slate-800 rounded inline-block font-black border dark:border-slate-700">${t.tarp}</div>
                             </div>
                         </div>
                     `).join('');
+                } else {
+                    container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Database Empty</p>`;
                 }
-            } catch (e) { console.error("History sync failed"); }
+            } catch (e) {
+                container.innerHTML = `<p class="text-center text-xs text-rose-500 py-4">Sync Error</p>`;
+            }
         }
 
         document.getElementById('tripForm').addEventListener('submit', async (e) => {
@@ -236,7 +241,7 @@
             const repo = localStorage.getItem('gh_repo');
 
             btn.disabled = true;
-            btn.innerText = "COMMITTING...";
+            btn.innerText = "UPLOADING...";
 
             try {
                 const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
@@ -244,7 +249,6 @@
                 });
                 const fileData = await res.json();
                 const trips = JSON.parse(atob(fileData.content));
-
                 const tarpValue = document.querySelector('input[name="tarp_type"]:checked').value;
 
                 const newTrip = {
@@ -261,24 +265,26 @@
 
                 trips.push(newTrip);
 
-                await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
+                const updateRes = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
                     method: 'PUT',
                     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: `Archive entry ${newTrip.order}`,
+                        message: `Archive Entry: ${newTrip.order}`,
                         content: btoa(JSON.stringify(trips, null, 2)),
                         sha: fileData.sha
                     })
                 });
 
-                alert("LOG COMMITTED TO CLOUD");
-                document.getElementById('tripForm').reset();
-                fetchHistory();
+                if(updateRes.ok) {
+                    alert("ENTRY SUCCESSFUL");
+                    document.getElementById('tripForm').reset();
+                    fetchHistory();
+                } else { throw new Error(); }
             } catch (err) {
-                alert("CRITICAL ERROR: " + err.message);
+                alert("UPLOAD FAILED");
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Commit to Cloud";
+                btn.innerText = "Submit Log Entry";
             }
         });
 
@@ -300,7 +306,7 @@
 
                 const doc = new jsPDF('l', 'mm', 'a4');
                 doc.setFontSize(22);
-                doc.text("FLEET LOG ARCHIVE", 14, 20);
+                doc.text("FLEET TRIP LOG ARCHIVE", 14, 20);
                 
                 const tableData = filtered.map(t => [
                     t.order, t.pDate, t.pCity, t.dDate, t.dCity, t.truck, t.trailer, t.tarp, t.codriver
