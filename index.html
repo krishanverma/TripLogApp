@@ -182,30 +182,39 @@
                             'Lumber': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
                             'None': 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-500'
                         };
+                        
                         return `
                         <div class="feed-item bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
-                            <div class="flex justify-between items-start mb-2">
+                            <div class="flex justify-between items-start mb-3">
                                 <div class="flex flex-col">
                                     <span class="text-[10px] font-black text-blue-500 uppercase tracking-tighter">${t.order}</span>
-                                    <span class="text-[9px] font-bold text-slate-400 uppercase">${t.pDate}</span>
+                                    <div class="flex items-center gap-1 text-[8px] font-bold text-slate-400 uppercase">
+                                        <span>${t.pDate}</span>
+                                        <span class="text-slate-300">/</span>
+                                        <span class="text-rose-500/70">${t.dDate}</span>
+                                    </div>
                                 </div>
                                 <span class="px-2 py-1 rounded-md text-[8px] font-black uppercase border dark:border-slate-700 ${tarpColors[t.tarp] || tarpColors['None']}">${t.tarp} TARP</span>
                             </div>
-                            <div class="flex items-center gap-3">
+
+                            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                                 <div class="flex-1">
-                                    <p class="text-[11px] font-black uppercase truncate">${t.pCity}</p>
+                                    <span class="text-[7px] font-bold text-emerald-500 uppercase block leading-none mb-1">Origin</span>
+                                    <p class="text-[10px] font-black uppercase truncate">${t.pCity}</p>
                                 </div>
                                 <div class="flex items-center text-slate-300">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                                 </div>
                                 <div class="flex-1 text-right">
-                                    <p class="text-[11px] font-black uppercase truncate">${t.dCity}</p>
+                                    <span class="text-[7px] font-bold text-rose-500 uppercase block leading-none mb-1">Dest</span>
+                                    <p class="text-[10px] font-black uppercase truncate">${t.dCity}</p>
                                 </div>
                             </div>
+
                             <div class="mt-3 pt-3 border-t dark:border-slate-800 flex justify-between items-center">
                                 <div class="flex gap-4">
                                     <div class="flex flex-col">
-                                        <span class="text-[7px] font-bold text-slate-400 uppercase italic">Truck</span>
+                                        <span class="text-[7px] font-bold text-slate-400 uppercase italic">Unit</span>
                                         <span class="text-[9px] font-black uppercase text-slate-600 dark:text-slate-400">${t.truck}</span>
                                     </div>
                                     <div class="flex flex-col">
@@ -213,11 +222,15 @@
                                         <span class="text-[9px] font-black uppercase text-slate-600 dark:text-slate-400">${t.trailer}</span>
                                     </div>
                                 </div>
-                                <div class="text-[8px] font-bold text-slate-400 uppercase">${t.codriver === 'SOLO' ? 'Solo Ops' : 'Team: ' + t.codriver}</div>
+                                <div class="text-[8px] font-bold text-slate-500 uppercase tracking-tight">
+                                    ${t.codriver === 'SOLO' || !t.codriver ? 'Solo Operator' : 'Team: ' + t.codriver}
+                                </div>
                             </div>
                         </div>`;
                     }).join('');
-                } catch (e) { list.innerHTML = `<p class="text-rose-500 text-[10px] text-center py-10 font-black">Archive Sync Failed</p>`; }
+                } catch (e) { 
+                    list.innerHTML = `<p class="text-rose-500 text-[10px] text-center py-10 font-black uppercase">Archive Sync Failed</p>`; 
+                }
             },
 
             async submit(e) {
