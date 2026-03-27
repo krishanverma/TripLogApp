@@ -8,88 +8,116 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen pb-10">
+<body class="bg-gray-100 min-h-screen pb-20 font-sans">
 
     <div class="max-w-3xl mx-auto p-4">
         <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
             <div class="bg-blue-900 p-6 text-white text-center">
-                <h1 class="text-3xl font-black tracking-tighter">TRUCK LOG PRO</h1>
-                <div id="connectionStatus" class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-300">
+                <h1 class="text-3xl font-black tracking-tighter italic">TRUCK LOG PRO</h1>
+                <div id="connectionStatus" class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-800 text-gray-300">
                     <span id="statusDot" class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
-                    <span id="statusText">OFFLINE (NO SETTINGS)</span>
+                    <span id="statusText">WAITING FOR SETTINGS</span>
                 </div>
             </div>
 
             <details class="bg-gray-50 border-b" id="settingsDetails">
                 <summary class="p-3 text-xs text-gray-500 cursor-pointer hover:bg-gray-100 uppercase font-bold text-center">
-                    Settings & Connection Test
+                    Connection & Data Settings
                 </summary>
                 <div class="p-4 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-600">GitHub Token</label>
-                            <input type="password" id="ghToken" class="w-full p-2 border rounded text-sm" placeholder="ghp_xxxxxxxx">
+                            <label class="block text-xs font-bold text-gray-600 uppercase">GitHub Token</label>
+                            <input type="password" id="ghToken" class="w-full p-2 border rounded text-sm shadow-inner" placeholder="ghp_xxxxxxxx">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-600">Data Repo (User/Repo)</label>
-                            <input type="text" id="ghRepo" class="w-full p-2 border rounded text-sm" placeholder="username/my-trip-data">
+                            <label class="block text-xs font-bold text-gray-600 uppercase">Data Repo (User/Repo)</label>
+                            <input type="text" id="ghRepo" class="w-full p-2 border rounded text-sm shadow-inner" placeholder="username/my-trip-data">
                         </div>
                     </div>
-                    <button onclick="testAndSaveSettings()" id="testBtn" class="w-full bg-black text-white py-3 rounded font-bold hover:bg-gray-800 transition">
-                        TEST & SAVE CONNECTION
+                    <button onclick="testAndSaveSettings()" id="testBtn" class="w-full bg-black text-white py-3 rounded font-bold hover:bg-gray-800 transition uppercase tracking-widest">
+                        Verify & Link Account
                     </button>
                 </div>
             </details>
 
             <form id="tripForm" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="md:col-span-2 border-b pb-1 mb-2 font-bold text-blue-900 uppercase text-sm">Trip Details</div>
+                <div class="md:col-span-2 border-l-4 border-blue-900 pl-2 mb-2 font-black text-blue-900 uppercase text-sm tracking-widest">New Entry</div>
+                
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Order #</label>
-                    <input type="text" id="order_number" required class="w-full border-b-2 border-gray-200 focus:border-blue-600 outline-none py-2 text-lg font-bold uppercase">
+                    <label class="block text-xs font-bold text-gray-500 uppercase">Order Number</label>
+                    <input type="text" id="order_number" required class="w-full border-b-2 border-gray-200 focus:border-blue-600 outline-none py-2 text-xl font-bold uppercase placeholder-gray-300" placeholder="LOAD-555">
                 </div>
+
                 <div>
                     <label class="block text-xs font-bold text-green-700 uppercase">Pickup Date</label>
-                    <input type="date" id="pickup_date" required class="w-full border rounded p-2 mt-1">
+                    <input type="date" id="pickup_date" required class="w-full border rounded p-3 mt-1 font-bold">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-green-700 uppercase">Pickup City</label>
-                    <input type="text" id="pickup_city" required placeholder="City, State" class="w-full border rounded p-2 mt-1">
+                    <input type="text" id="pickup_city" required placeholder="Chicago, IL" class="w-full border rounded p-3 mt-1">
                 </div>
+
                 <div>
                     <label class="block text-xs font-bold text-red-700 uppercase">Delivery Date</label>
-                    <input type="date" id="delivery_date" required class="w-full border rounded p-2 mt-1">
+                    <input type="date" id="delivery_date" required class="w-full border rounded p-3 mt-1 font-bold">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-red-700 uppercase">Delivery City</label>
-                    <input type="text" id="delivery_city" required placeholder="City, State" class="w-full border rounded p-2 mt-1">
+                    <input type="text" id="delivery_city" required placeholder="Toronto, ON" class="w-full border rounded p-3 mt-1">
                 </div>
-                <div class="md:col-span-2 border-b pb-1 mb-2 mt-4 font-bold text-blue-900 uppercase text-sm">Equipment & Crew</div>
+
+                <div class="md:col-span-2 border-l-4 border-gray-400 pl-2 mb-2 mt-4 font-black text-gray-600 uppercase text-sm tracking-widest">Equipment</div>
+
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase">Truck ID</label>
-                    <input type="text" id="truck" required class="w-full border rounded p-2 mt-1">
+                    <input type="text" id="truck" required class="w-full border rounded p-3 mt-1">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase">Trailer #</label>
-                    <input type="text" id="trailer" required class="w-full border rounded p-2 mt-1">
+                    <input type="text" id="trailer" required class="w-full border rounded p-3 mt-1">
                 </div>
-                <div class="flex items-center space-x-2 pt-4">
+
+                <div class="flex items-center space-x-2 bg-gray-50 p-3 rounded border">
                     <input type="checkbox" id="tarp" class="w-6 h-6 border-gray-300 rounded">
-                    <label class="text-sm font-bold text-gray-700">TARP REQUIRED</label>
+                    <label class="text-sm font-bold text-gray-700 uppercase">Tarp Required</label>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Co-driver</label>
-                    <input type="text" id="co_driver" placeholder="None" class="w-full border rounded p-2 mt-1">
+                    <label class="block text-xs font-bold text-gray-500 uppercase font-mono">Co-driver Name</label>
+                    <input type="text" id="co_driver" placeholder="Solo" class="w-full border rounded p-3 mt-1">
                 </div>
-                <button type="submit" id="saveBtn" class="md:col-span-2 mt-6 bg-blue-700 text-white font-black py-5 rounded-xl shadow-lg hover:bg-blue-800 active:scale-95 transition text-xl uppercase">
-                    SAVE TRIP TO CLOUD
+
+                <button type="submit" id="saveBtn" class="md:col-span-2 mt-6 bg-blue-700 text-white font-black py-5 rounded-xl shadow-lg hover:bg-blue-800 active:scale-95 transition text-xl uppercase tracking-tighter">
+                    SEND TO CLOUD
                 </button>
             </form>
 
-            <div class="p-6 bg-gray-50 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
-                <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Reports</span>
+            <div class="bg-gray-100 p-6 border-t border-b">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-black text-gray-600 uppercase tracking-widest">Recent Logs</h2>
+                    <button onclick="fetchHistory()" class="text-[10px] bg-white border px-2 py-1 rounded shadow-sm hover:bg-gray-50 uppercase font-bold text-gray-500">Refresh History</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs bg-white border rounded shadow-sm">
+                        <thead class="bg-gray-200 font-black">
+                            <tr>
+                                <th class="p-2 border-b">Order</th>
+                                <th class="p-2 border-b">Pickup</th>
+                                <th class="p-2 border-b">Destination</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr><td colspan="3" class="p-4 text-center text-gray-400">Save a trip to see history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="p-6 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span class="text-xs font-black text-blue-900 uppercase tracking-widest">Generate Monthly PDF</span>
                 <div class="flex w-full sm:w-auto gap-2">
-                    <input type="month" id="exportMonth" class="flex-1 p-2 border rounded font-bold text-sm">
-                    <button onclick="exportToPDF()" class="bg-red-600 text-white px-6 py-2 rounded font-black hover:bg-red-700 uppercase text-sm">PDF</button>
+                    <input type="month" id="exportMonth" class="flex-1 p-2 border rounded font-bold text-sm bg-gray-50">
+                    <button onclick="exportToPDF()" class="bg-red-600 text-white px-8 py-2 rounded font-black hover:bg-red-700 uppercase text-sm shadow-md">Export</button>
                 </div>
             </div>
         </div>
@@ -98,27 +126,24 @@
     <script>
         window.jsPDF = window.jspdf.jsPDF;
 
-        // Auto-load settings and test connection on start
+        // Auto-load on startup
         window.onload = () => {
             const token = localStorage.getItem('gh_token');
             const repo = localStorage.getItem('gh_repo');
             if(token && repo) {
                 document.getElementById('ghToken').value = token;
                 document.getElementById('ghRepo').value = repo;
-                testAndSaveSettings(true); // Silent test
+                testAndSaveSettings(true);
             }
         };
 
         async function testAndSaveSettings(isSilent = false) {
             const token = document.getElementById('ghToken').value.trim();
             const repo = document.getElementById('ghRepo').value.trim();
-            const btn = document.getElementById('testBtn');
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
 
             if(!token || !repo) return;
-
-            if(!isSilent) btn.innerText = "TESTING...";
 
             try {
                 const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
@@ -129,21 +154,46 @@
                     localStorage.setItem('gh_token', token);
                     localStorage.setItem('gh_repo', repo);
                     statusDot.className = "w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse";
-                    statusText.innerText = "CONNECTED TO CLOUD";
+                    statusText.innerText = "CLOUD CONNECTED";
+                    fetchHistory();
                     if(!isSilent) {
-                        alert("✅ Connection Successful! Data repo found.");
+                        alert("✅ SUCCESS: Linked to " + repo);
                         document.getElementById('settingsDetails').open = false;
                     }
-                } else {
-                    throw new Error(res.statusText);
-                }
+                } else { throw new Error("Invalid Repo/Token"); }
             } catch (err) {
                 statusDot.className = "w-2 h-2 rounded-full bg-red-500 mr-2";
-                statusText.innerText = "CONNECTION ERROR";
-                if(!isSilent) alert("❌ Error: " + err.message + ". Check your token and repo name.");
-            } finally {
-                if(!isSilent) btn.innerText = "TEST & SAVE CONNECTION";
+                statusText.innerText = "CONNECTION FAILED";
             }
+        }
+
+        async function fetchHistory() {
+            const token = localStorage.getItem('gh_token');
+            const repo = localStorage.getItem('gh_repo');
+            const body = document.getElementById('historyBody');
+            
+            if(!token || !repo) return;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                const fileData = await res.json();
+                const trips = JSON.parse(atob(fileData.content));
+                
+                // Get last 5 trips, reversed so newest is on top
+                const recent = trips.slice(-5).reverse();
+                
+                if(recent.length > 0) {
+                    body.innerHTML = recent.map(t => `
+                        <tr class="hover:bg-blue-50 transition border-b">
+                            <td class="p-2 font-bold">${t.order}</td>
+                            <td class="p-2">${t.pDate}</td>
+                            <td class="p-2 text-gray-600">${t.dCity}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) { console.error("History fetch failed"); }
         }
 
         document.getElementById('tripForm').addEventListener('submit', async (e) => {
@@ -152,10 +202,8 @@
             const token = localStorage.getItem('gh_token');
             const repo = localStorage.getItem('gh_repo');
 
-            if(!token || !repo) return alert("Please set up your Connection Settings first!");
-
             btn.disabled = true;
-            btn.innerText = "UPLOADING...";
+            btn.innerText = "UPLOADING LOAD DATA...";
 
             try {
                 const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
@@ -165,7 +213,6 @@
                 const trips = JSON.parse(atob(fileData.content));
 
                 const newTrip = {
-                    id: Date.now(),
                     order: document.getElementById('order_number').value.toUpperCase(),
                     pDate: document.getElementById('pickup_date').value,
                     pCity: document.getElementById('pickup_city').value,
@@ -174,40 +221,38 @@
                     truck: document.getElementById('truck').value,
                     trailer: document.getElementById('trailer').value,
                     tarp: document.getElementById('tarp').checked ? "YES" : "NO",
-                    codriver: document.getElementById('co_driver').value || "N/A"
+                    codriver: document.getElementById('co_driver').value || "SOLO"
                 };
 
                 trips.push(newTrip);
 
-                const updateRes = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
+                await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
                     method: 'PUT',
                     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: `Trip ${newTrip.order} logged`,
+                        message: `Logged ${newTrip.order}`,
                         content: btoa(JSON.stringify(trips, null, 2)),
                         sha: fileData.sha
                     })
                 });
 
-                if(updateRes.ok) {
-                    alert("✅ TRIP SAVED TO CLOUD");
-                    document.getElementById('tripForm').reset();
-                } else {
-                    throw new Error("Failed to upload.");
-                }
+                alert("✅ LOGGED SUCCESSFULLY");
+                document.getElementById('tripForm').reset();
+                fetchHistory();
             } catch (err) {
-                alert("❌ SAVE FAILED: " + err.message);
+                alert("❌ ERROR SAVING: " + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "SAVE TRIP TO CLOUD";
+                btn.innerText = "SEND TO CLOUD";
             }
         });
 
         async function exportToPDF() {
-            const selectedMonth = document.getElementById('exportMonth').value;
-            if(!selectedMonth) return alert("Select a month first!");
+            const month = document.getElementById('exportMonth').value;
             const token = localStorage.getItem('gh_token');
             const repo = localStorage.getItem('gh_repo');
+
+            if(!month) return alert("Select Month First");
 
             try {
                 const res = await fetch(`https://api.github.com/repos/${repo}/contents/trips.json`, {
@@ -215,30 +260,31 @@
                 });
                 const fileData = await res.json();
                 const trips = JSON.parse(atob(fileData.content));
-                const filtered = trips.filter(t => t.pDate.startsWith(selectedMonth));
+                const filtered = trips.filter(t => t.pDate.startsWith(month));
 
-                if(filtered.length === 0) return alert("No trips found for this month!");
+                if(filtered.length === 0) return alert("No Data for " + month);
 
-                const doc = new jsPDF('landscape');
-                doc.setFontSize(20);
-                doc.text(`TRUCK LOG REPORT: ${selectedMonth}`, 14, 20);
+                const doc = new jsPDF('l', 'mm', 'a4');
+                doc.setFontSize(22);
+                doc.setTextColor(0, 51, 102);
+                doc.text("TRUCK LOG REPORT", 14, 20);
+                doc.setFontSize(12);
+                doc.text(`Period: ${month}`, 14, 28);
                 
                 const tableData = filtered.map(t => [
                     t.order, t.pDate, t.pCity, t.dDate, t.dCity, t.truck, t.trailer, t.tarp, t.codriver
                 ]);
 
                 doc.autoTable({
-                    startY: 30,
-                    head: [['Order #', 'Pickup', 'From', 'Delivery', 'To', 'Truck', 'Trailer', 'Tarp', 'Co-Driver']],
+                    startY: 35,
+                    head: [['ORDER #', 'PICKUP', 'FROM', 'DELIVERY', 'TO', 'TRUCK', 'TRAILER', 'TARP', 'CREW']],
                     body: tableData,
-                    theme: 'grid',
-                    headStyles: { fillColor: [0, 51, 102] }
+                    headStyles: { fillColor: [0, 51, 102], fontSize: 10 },
+                    styles: { fontSize: 9 }
                 });
 
-                doc.save(`Log-${selectedMonth}.pdf`);
-            } catch (err) {
-                alert("Could not load data for PDF.");
-            }
+                doc.save(`TruckLog_${month}.pdf`);
+            } catch (e) { alert("PDF Error"); }
         }
     </script>
 </body>
