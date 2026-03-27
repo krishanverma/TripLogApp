@@ -4,22 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Truck Log Pro | Fleet Archive</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
-    
+    <script>tailwind.config = { darkMode: 'class' }</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
     <style>
-        /* Prevents zoom on focus for iOS */
         input[type="text"], input[type="date"], input[type="password"] { font-size: 16px !important; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .feed-item { animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-
 <body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-500">
 
     <div class="max-w-2xl mx-auto p-4 md:pt-10">
@@ -29,8 +26,8 @@
                 <div>
                     <h1 class="text-2xl font-black tracking-tighter italic uppercase text-blue-500">Truck Log Pro</h1>
                     <div id="status-bar" class="mt-1 inline-flex items-center px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
-                        <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-2"></span>
-                        <span id="status-text" class="text-[9px] font-bold uppercase text-slate-400">Initializing...</span>
+                        <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-600 mr-2"></span>
+                        <span id="status-text" class="text-[9px] font-bold uppercase text-slate-400">Offline</span>
                     </div>
                 </div>
                 <button onclick="APP.toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 shadow-lg active:scale-90 transition-all">
@@ -39,113 +36,79 @@
             </header>
 
             <details id="config-panel" class="bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-800 group">
-                <summary class="p-3 text-[10px] text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">
-                    Database Settings
-                </summary>
+                <summary class="p-3 text-[10px] text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">Database Settings</summary>
                 <div class="p-5 space-y-4">
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">GitHub Access Token</label>
-                            <input type="password" id="cfg-token" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Repository Path (user/repo)</label>
-                            <input type="text" id="cfg-repo" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                        </div>
-                    </div>
-                    <button onclick="APP.saveConfig()" class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg hover:bg-blue-500 active:translate-y-0.5 transition-all">
-                        Link Database
-                    </button>
+                    <input type="password" id="cfg-token" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="Token">
+                    <input type="text" id="cfg-repo" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="User/Repo">
+                    <button onclick="APP.saveConfig()" class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg">Link Database</button>
                 </div>
             </details>
 
             <form id="log-form" class="p-6 space-y-6">
                 <div class="border-l-4 border-blue-600 pl-4">
-                    <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Order #</label>
-                    <input type="text" id="order_number" required placeholder="LOAD-XXXX" class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-800 focus:border-blue-600 outline-none py-2 text-3xl font-black uppercase placeholder-slate-200 dark:placeholder-slate-800 transition-all">
+                    <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Order Identifier</label>
+                    <input type="text" id="order_number" required placeholder="LOAD-XXXX" class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-600 outline-none py-2 text-3xl font-black uppercase">
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
-                        <label class="text-[10px] font-black text-emerald-600 uppercase mb-3 block">Origin (Pickup)</label>
-                        <input type="date" id="pickup_date" required class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 font-bold mb-2">
+                        <label class="text-[10px] font-black text-emerald-600 uppercase mb-3 block">Origin</label>
+                        <input type="date" id="pickup_date" required class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 font-bold mb-2 text-sm">
                         <input type="text" id="pickup_city" required placeholder="City, State" class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm">
                     </div>
                     <div class="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30">
-                        <label class="text-[10px] font-black text-rose-600 uppercase mb-3 block">Destination (Drop)</label>
-                        <input type="date" id="delivery_date" required class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 font-bold mb-2">
+                        <label class="text-[10px] font-black text-rose-600 uppercase mb-3 block">Destination</label>
+                        <input type="date" id="delivery_date" required class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 font-bold mb-2 text-sm">
                         <input type="text" id="delivery_city" required placeholder="City, State" class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Truck ID</label>
-                        <input type="text" id="truck" required class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Trailer #</label>
-                        <input type="text" id="trailer" required class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold">
-                    </div>
+                    <input type="text" id="truck" required placeholder="Truck ID" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
+                    <input type="text" id="trailer" required placeholder="Trailer #" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
                 </div>
 
                 <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase text-center mb-4 tracking-widest">Tarp Specification</label>
                     <div class="flex justify-between items-center px-4">
-                        <label class="flex flex-col items-center gap-2 cursor-pointer group">
-                            <input type="radio" name="tarp_type" value="None" checked class="sr-only peer">
-                            <div class="w-12 h-12 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-600 text-[10px] font-black transition-all">OFF</div>
-                            <span class="text-[9px] font-bold text-slate-500 peer-checked:text-blue-500">NONE</span>
-                        </label>
-                        <label class="flex flex-col items-center gap-2 cursor-pointer group">
-                            <input type="radio" name="tarp_type" value="Steel" class="sr-only peer">
-                            <div class="w-12 h-12 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-600 text-[10px] font-black transition-all">STL</div>
-                            <span class="text-[9px] font-bold text-slate-500 peer-checked:text-blue-500">STEEL</span>
-                        </label>
-                        <label class="flex flex-col items-center gap-2 cursor-pointer group">
-                            <input type="radio" name="tarp_type" value="Lumber" class="sr-only peer">
-                            <div class="w-12 h-12 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-600 text-[10px] font-black transition-all">LMB</div>
-                            <span class="text-[9px] font-bold text-slate-500 peer-checked:text-blue-500">LUMBER</span>
-                        </label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="None" checked class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">OFF</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500">NONE</span></label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Steel" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">STL</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500">STEEL</span></label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Lumber" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">LMB</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500">LUMBER</span></label>
                     </div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Co-Driver</label>
-                    <input type="text" id="co_driver" placeholder="Solo Operations" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950">
-                </div>
-
-                <button type="submit" id="submit-btn" class="w-full bg-blue-600 py-5 rounded-2xl text-white font-black uppercase text-lg italic tracking-tighter shadow-xl hover:bg-blue-500 active:scale-[0.98] transition-all border-b-4 border-blue-800">
-                    Submit to Archive
-                </button>
+                <input type="text" id="co_driver" placeholder="Co-Driver (Optional)" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm">
+                <button type="submit" id="submit-btn" class="w-full bg-blue-600 py-5 rounded-2xl text-white font-black uppercase text-lg italic tracking-tighter shadow-xl hover:bg-blue-500 active:scale-[0.98] transition-all border-b-4 border-blue-800">Submit to Archive</button>
             </form>
 
             <section class="bg-slate-50 dark:bg-slate-950/50 p-6 border-t dark:border-slate-800">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fleet Feed</h2>
-                    <button onclick="APP.refresh()" class="text-[10px] font-bold text-blue-500 uppercase hover:underline">Sync</button>
+                <div class="flex justify-between items-center mb-5">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1 h-4 bg-blue-500 rounded-full"></div>
+                        <h2 class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Live Fleet Feed</h2>
+                    </div>
+                    <button onclick="APP.refresh()" class="p-2 bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg shadow-sm hover:text-blue-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </button>
                 </div>
-                <div id="history-list" class="space-y-3">
-                    <div class="animate-pulse flex space-x-4"><div class="flex-1 space-y-2 py-1"><div class="h-10 bg-slate-200 dark:bg-slate-800 rounded"></div></div></div>
+                
+                <div id="history-list" class="space-y-4">
+                    <div class="flex flex-col items-center justify-center py-10 text-slate-400">
+                        <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <span class="text-[10px] font-black uppercase tracking-tighter">Syncing Archive...</span>
+                    </div>
                 </div>
             </section>
 
             <footer class="p-6 bg-white dark:bg-slate-900 border-t dark:border-slate-800">
                 <div class="flex flex-col sm:flex-row items-center gap-4">
-                    <div class="flex-1 w-full">
-                        <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Monthly Report Generation</label>
-                        <input type="month" id="report-month" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-lg font-bold text-xs">
-                    </div>
-                    <button onclick="APP.generatePDF()" class="w-full sm:w-auto px-8 py-3 bg-rose-600 text-white font-black uppercase text-xs rounded-xl shadow-lg hover:bg-rose-500 transition-colors">Export PDF</button>
+                    <input type="month" id="report-month" class="w-full sm:flex-1 p-3 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-xl font-bold text-xs outline-none">
+                    <button onclick="APP.generatePDF()" class="w-full sm:w-auto px-10 py-3 bg-rose-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg hover:bg-rose-500 transition-all">Export PDF</button>
                 </div>
             </footer>
         </div>
     </div>
 
     <script>
-        /** * APP CONTROLLER 
-         * Encapsulated to prevent global namespace pollution and errors
-         */
         const APP = {
             config: { token: '', repo: '' },
             
@@ -155,7 +118,7 @@
                 if(this.config.token && this.config.repo) {
                     this.verifyConnection(true);
                 } else {
-                    this.updateStatus('offline', 'No Credentials');
+                    this.updateStatus('offline', 'Awaiting Sync');
                     document.getElementById('config-panel').open = true;
                 }
             },
@@ -170,8 +133,6 @@
             saveConfig() {
                 const token = document.getElementById('cfg-token').value.trim();
                 const repo = document.getElementById('cfg-repo').value.trim();
-                if(!token || !repo) return alert("Fill all fields");
-                
                 localStorage.setItem('tlp_token', token);
                 localStorage.setItem('tlp_repo', repo);
                 this.config.token = token;
@@ -180,31 +141,23 @@
             },
 
             async verifyConnection(silent = false) {
-                this.updateStatus('testing', 'Connecting...');
+                this.updateStatus('testing', 'Syncing...');
                 try {
                     const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
                         headers: { 'Authorization': `token ${this.config.token}` }
                     });
                     if(res.ok) {
-                        this.updateStatus('online', 'Database Ready');
+                        this.updateStatus('online', 'Connected');
                         this.refresh();
                         if(!silent) document.getElementById('config-panel').open = false;
-                    } else { throw new Error(res.status); }
-                } catch (e) {
-                    this.updateStatus('error', 'Link Failed');
-                    if(!silent) alert("Connection Error: Check Repo Name and Token permissions.");
-                }
+                    } else { throw new Error(); }
+                } catch (e) { this.updateStatus('error', 'Sync Failed'); }
             },
 
             updateStatus(type, msg) {
                 const dot = document.getElementById('status-dot');
                 const txt = document.getElementById('status-text');
-                const colors = {
-                    online: 'bg-blue-500 animate-pulse',
-                    testing: 'bg-amber-500 animate-bounce',
-                    error: 'bg-rose-600',
-                    offline: 'bg-slate-600'
-                };
+                const colors = { online: 'bg-blue-500 animate-pulse', testing: 'bg-amber-500 animate-bounce', error: 'bg-rose-600', offline: 'bg-slate-600' };
                 dot.className = `w-1.5 h-1.5 rounded-full mr-2 ${colors[type] || colors.offline}`;
                 txt.innerText = msg;
             },
@@ -216,43 +169,68 @@
                         headers: { 'Authorization': `token ${this.config.token}` }
                     });
                     const data = await res.json();
-                    const trips = JSON.parse(atob(data.content)).slice(-4).reverse();
+                    const trips = JSON.parse(atob(data.content)).slice(-5).reverse();
                     
                     if(trips.length === 0) {
-                        list.innerHTML = `<p class="text-center text-[10px] text-slate-500 uppercase py-4">No Entries Found</p>`;
+                        list.innerHTML = `<div class="text-center py-10 opacity-30"><span class="text-[10px] font-black uppercase">No Logs Found</span></div>`;
                         return;
                     }
 
-                    list.innerHTML = trips.map(t => `
-                        <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-xl shadow-sm">
-                            <div class="flex-1">
-                                <span class="text-[9px] font-black text-blue-500 uppercase tracking-tighter">${t.order}</span>
-                                <h3 class="text-xs font-black truncate uppercase">${t.dCity}</h3>
+                    list.innerHTML = trips.map((t, i) => {
+                        const tarpColors = {
+                            'Steel': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                            'Lumber': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                            'None': 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-500'
+                        };
+                        return `
+                        <div class="feed-item bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] font-black text-blue-500 uppercase tracking-tighter">${t.order}</span>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase">${t.pDate}</span>
+                                </div>
+                                <span class="px-2 py-1 rounded-md text-[8px] font-black uppercase border dark:border-slate-700 ${tarpColors[t.tarp] || tarpColors['None']}">${t.tarp} TARP</span>
                             </div>
-                            <div class="text-right">
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">${t.pDate}</p>
-                                <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[8px] font-black border dark:border-slate-700">${t.tarp}</span>
+                            <div class="flex items-center gap-3">
+                                <div class="flex-1">
+                                    <p class="text-[11px] font-black uppercase truncate">${t.pCity}</p>
+                                </div>
+                                <div class="flex items-center text-slate-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </div>
+                                <div class="flex-1 text-right">
+                                    <p class="text-[11px] font-black uppercase truncate">${t.dCity}</p>
+                                </div>
                             </div>
-                        </div>
-                    `).join('');
-                } catch (e) { list.innerHTML = `<p class="text-rose-500 text-[10px] text-center">Sync Error</p>`; }
+                            <div class="mt-3 pt-3 border-t dark:border-slate-800 flex justify-between items-center">
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-[7px] font-bold text-slate-400 uppercase italic">Truck</span>
+                                        <span class="text-[9px] font-black uppercase text-slate-600 dark:text-slate-400">${t.truck}</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-[7px] font-bold text-slate-400 uppercase italic">Trailer</span>
+                                        <span class="text-[9px] font-black uppercase text-slate-600 dark:text-slate-400">${t.trailer}</span>
+                                    </div>
+                                </div>
+                                <div class="text-[8px] font-bold text-slate-400 uppercase">${t.codriver === 'SOLO' ? 'Solo Ops' : 'Team: ' + t.codriver}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } catch (e) { list.innerHTML = `<p class="text-rose-500 text-[10px] text-center py-10 font-black">Archive Sync Failed</p>`; }
             },
 
             async submit(e) {
                 e.preventDefault();
                 const btn = document.getElementById('submit-btn');
                 btn.disabled = true;
-                btn.innerText = "UPLOADING TO CLOUD...";
-
+                btn.innerText = "UPLOADING...";
                 try {
-                    // 1. Get current file state
                     const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
                         headers: { 'Authorization': `token ${this.config.token}` }
                     });
                     const fileData = await res.json();
                     const trips = JSON.parse(atob(fileData.content));
-
-                    // 2. Build payload
                     const newEntry = {
                         order: document.getElementById('order_number').value.toUpperCase(),
                         pDate: document.getElementById('pickup_date').value,
@@ -264,73 +242,35 @@
                         tarp: document.querySelector('input[name="tarp_type"]:checked').value,
                         codriver: document.getElementById('co_driver').value || "SOLO"
                     };
-
                     trips.push(newEntry);
-
-                    // 3. Push to GitHub
                     const update = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
                         method: 'PUT',
                         headers: { 'Authorization': `token ${this.config.token}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            message: `Archive: ${newEntry.order}`,
-                            content: btoa(JSON.stringify(trips, null, 2)),
-                            sha: fileData.sha
-                        })
+                        body: JSON.stringify({ message: `Log: ${newEntry.order}`, content: btoa(JSON.stringify(trips, null, 2)), sha: fileData.sha })
                     });
-
                     if(!update.ok) throw new Error();
-
-                    alert("✅ LOG ARCHIVED SUCCESSFULLY");
                     document.getElementById('log-form').reset();
                     this.refresh();
-                } catch (e) {
-                    alert("❌ CRITICAL UPLOAD FAILURE");
-                } finally {
-                    btn.disabled = false;
-                    btn.innerText = "Submit to Archive";
-                }
+                } catch (e) { alert("ERROR SAVING"); } finally { btn.disabled = false; btn.innerText = "Submit to Archive"; }
             },
 
             async generatePDF() {
                 const month = document.getElementById('report-month').value;
-                if(!month) return alert("Select month first");
-
+                if(!month) return alert("Select month");
                 try {
-                    const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
-                        headers: { 'Authorization': `token ${this.config.token}` }
-                    });
+                    const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, { headers: { 'Authorization': `token ${this.config.token}` } });
                     const data = await res.json();
-                    const allTrips = JSON.parse(atob(data.content));
-                    const filtered = allTrips.filter(t => t.pDate.startsWith(month));
-
-                    if(filtered.length === 0) return alert("No logs for this month");
-
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF('l', 'mm', 'a4');
-                    
-                    doc.setFontSize(22);
-                    doc.setTextColor(15, 23, 42);
-                    doc.text("FLEET TRIP LOG ARCHIVE", 14, 20);
-                    doc.setFontSize(10);
-                    doc.text(`REPORTING PERIOD: ${month}`, 14, 28);
-
-                    const rows = filtered.map(t => [t.order, t.pDate, t.pCity, t.dDate, t.dCity, t.truck, t.trailer, t.tarp, t.codriver]);
-
-                    doc.autoTable({
-                        startY: 35,
-                        head: [['ID', 'PICKUP', 'FROM', 'DELIVERY', 'TO', 'TRK', 'TRL', 'TARP', 'CREW']],
-                        body: rows,
-                        headStyles: { fillColor: [15, 23, 42], fontSize: 8 },
-                        styles: { fontSize: 8, cellPadding: 2 }
-                    });
-
+                    const filtered = JSON.parse(atob(data.content)).filter(t => t.pDate.startsWith(month));
+                    if(filtered.length === 0) return alert("No logs found");
+                    const doc = new window.jspdf.jsPDF('l', 'mm', 'a4');
+                    doc.setFontSize(22); doc.text("FLEET TRIP LOG ARCHIVE", 14, 20);
+                    doc.autoTable({ startY: 35, head: [['ID', 'PICKUP', 'FROM', 'DELIVERY', 'TO', 'TRK', 'TRL', 'TARP', 'CREW']], body: filtered.map(t => [t.order, t.pDate, t.pCity, t.dDate, t.dCity, t.truck, t.trailer, t.tarp, t.codriver]), headStyles: { fillColor: [15, 23, 42] } });
                     doc.save(`Log_${month}.pdf`);
                 } catch (e) { alert("PDF Error"); }
             },
 
             applyTheme() {
-                const theme = localStorage.getItem('theme');
-                const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const isDark = localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 document.documentElement.classList.toggle('dark', isDark);
                 document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
             },
@@ -341,11 +281,7 @@
                 document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
             }
         };
-
-        // Event Listeners
         document.getElementById('log-form').addEventListener('submit', (e) => APP.submit(e));
-        
-        // Start App
         APP.init();
     </script>
 </body>
