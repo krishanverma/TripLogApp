@@ -1,20 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Truck Log Pro | Fleet Archive</title>
+    <title>Truck Log Pro | Entry Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         input[type="text"], input[type="date"], input[type="password"] { font-size: 16px !important; }
-        .feed-item { animation: slideIn 0.3s ease-out forwards; }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-500">
@@ -24,10 +17,13 @@
             
             <header class="bg-slate-900 dark:bg-black p-6 flex justify-between items-center border-b border-blue-500/20">
                 <div>
-                    <h1 class="text-2xl font-black tracking-tighter italic uppercase text-blue-500">Truck Log Pro</h1>
-                    <div id="status-bar" class="mt-1 inline-flex items-center px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
-                        <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-600 mr-2"></span>
-                        <span id="status-text" class="text-[9px] font-bold uppercase text-slate-400">Offline</span>
+                    <h1 class="text-2xl font-black tracking-tighter italic uppercase text-blue-500">Truck Log Pro v1.1</h1>
+                    <div id="status-bar" class="mt-1 flex items-center gap-3">
+                        <div class="inline-flex items-center px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                            <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-600 mr-2"></span>
+                            <span id="status-text" class="text-[9px] font-bold uppercase text-slate-400">Offline</span>
+                        </div>
+                        <a href="viewer.html" class="text-[9px] font-black text-blue-400 uppercase tracking-widest hover:underline">Open Live Feed →</a>
                     </div>
                 </div>
                 <button onclick="APP.toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 shadow-lg active:scale-90 transition-all">
@@ -36,11 +32,11 @@
             </header>
 
             <details id="config-panel" class="bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-800 group">
-                <summary class="p-3 text-[10px] text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">Database Settings</summary>
+                <summary class="p-3 text-[10px] text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">Connection Settings</summary>
                 <div class="p-5 space-y-4">
-                    <input type="password" id="cfg-token" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="Token">
+                    <input type="password" id="cfg-token" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="GitHub Token">
                     <input type="text" id="cfg-repo" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="User/Repo">
-                    <button onclick="APP.saveConfig()" class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg">Link Database</button>
+                    <button onclick="APP.saveConfig()" class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg">Verify Link</button>
                 </div>
             </details>
 
@@ -52,12 +48,12 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
-                        <label class="text-[10px] font-black text-emerald-600 uppercase mb-3 block">Origin</label>
+                        <label class="text-[10px] font-black text-emerald-600 uppercase mb-3 block">Pickup Details</label>
                         <input type="date" id="pickup_date" required class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 font-bold mb-2 text-sm">
                         <input type="text" id="pickup_city" required placeholder="City, State" class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm">
                     </div>
                     <div class="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30">
-                        <label class="text-[10px] font-black text-rose-600 uppercase mb-3 block">Destination</label>
+                        <label class="text-[10px] font-black text-rose-600 uppercase mb-3 block">Delivery Details</label>
                         <input type="date" id="delivery_date" required class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 font-bold mb-2 text-sm">
                         <input type="text" id="delivery_city" required placeholder="City, State" class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm">
                     </div>
@@ -70,40 +66,18 @@
 
                 <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
                     <div class="flex justify-between items-center px-4">
-                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="None" checked class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">OFF</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500">NONE</span></label>
-                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Steel" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">STL</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500">STEEL</span></label>
-                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Lumber" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">LMB</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500">LUMBER</span></label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="None" checked class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">OFF</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">None</span></label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Steel" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">STL</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">Steel</span></label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Lumber" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[9px] font-black transition-all">LMB</div><span class="text-[8px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">Lumber</span></label>
                     </div>
                 </div>
 
                 <input type="text" id="co_driver" placeholder="Co-Driver (Optional)" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm">
-                <button type="submit" id="submit-btn" class="w-full bg-blue-600 py-5 rounded-2xl text-white font-black uppercase text-lg italic tracking-tighter shadow-xl hover:bg-blue-500 active:scale-[0.98] transition-all border-b-4 border-blue-800">Submit to Archive</button>
+                <button type="submit" id="submit-btn" class="w-full bg-blue-600 py-5 rounded-2xl text-white font-black uppercase text-lg italic tracking-tighter shadow-xl hover:bg-blue-500 active:scale-[0.98] transition-all border-b-4 border-blue-800">Submit Log to Cloud</button>
             </form>
 
-            <section class="bg-slate-50 dark:bg-slate-950/50 p-6 border-t dark:border-slate-800">
-                <div class="flex justify-between items-center mb-5">
-                    <div class="flex items-center gap-2">
-                        <div class="w-1 h-4 bg-blue-500 rounded-full"></div>
-                        <h2 class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Live Fleet Feed</h2>
-                    </div>
-                    <button onclick="APP.refresh()" class="p-2 bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg shadow-sm hover:text-blue-500 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                    </button>
-                </div>
-                
-                <div id="history-list" class="space-y-4">
-                    <div class="flex flex-col items-center justify-center py-10 text-slate-400">
-                        <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                        <span class="text-[10px] font-black uppercase tracking-tighter">Syncing Archive...</span>
-                    </div>
-                </div>
-            </section>
-
-            <footer class="p-6 bg-white dark:bg-slate-900 border-t dark:border-slate-800">
-                <div class="flex flex-col sm:flex-row items-center gap-4">
-                    <input type="month" id="report-month" class="w-full sm:flex-1 p-3 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-xl font-bold text-xs outline-none">
-                    <button onclick="APP.generatePDF()" class="w-full sm:w-auto px-10 py-3 bg-rose-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg hover:bg-rose-500 transition-all">Export PDF</button>
-                </div>
+            <footer class="p-4 bg-slate-50 dark:bg-slate-950/50 text-center border-t dark:border-slate-800">
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Encrypted Fleet Archive Protocol</p>
             </footer>
         </div>
     </div>
@@ -118,7 +92,7 @@
                 if(this.config.token && this.config.repo) {
                     this.verifyConnection(true);
                 } else {
-                    this.updateStatus('offline', 'Awaiting Sync');
+                    this.updateStatus('offline', 'Setup Required');
                     document.getElementById('config-panel').open = true;
                 }
             },
@@ -141,17 +115,16 @@
             },
 
             async verifyConnection(silent = false) {
-                this.updateStatus('testing', 'Syncing...');
+                this.updateStatus('testing', 'Verifying...');
                 try {
                     const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
                         headers: { 'Authorization': `token ${this.config.token}` }
                     });
                     if(res.ok) {
-                        this.updateStatus('online', 'Connected');
-                        this.refresh();
+                        this.updateStatus('online', 'Database Active');
                         if(!silent) document.getElementById('config-panel').open = false;
                     } else { throw new Error(); }
-                } catch (e) { this.updateStatus('error', 'Sync Failed'); }
+                } catch (e) { this.updateStatus('error', 'Link Error'); }
             },
 
             updateStatus(type, msg) {
@@ -160,77 +133,6 @@
                 const colors = { online: 'bg-blue-500 animate-pulse', testing: 'bg-amber-500 animate-bounce', error: 'bg-rose-600', offline: 'bg-slate-600' };
                 dot.className = `w-1.5 h-1.5 rounded-full mr-2 ${colors[type] || colors.offline}`;
                 txt.innerText = msg;
-            },
-
-            async refresh() {
-                const list = document.getElementById('history-list');
-                try {
-                    const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
-                        headers: { 'Authorization': `token ${this.config.token}` }
-                    });
-                    const data = await res.json();
-                    const trips = JSON.parse(atob(data.content)).slice(-5).reverse();
-                    
-                    if(trips.length === 0) {
-                        list.innerHTML = `<div class="text-center py-10 opacity-30"><span class="text-[10px] font-black uppercase">No Logs Found</span></div>`;
-                        return;
-                    }
-
-                    list.innerHTML = trips.map((t, i) => {
-                        const tarpColors = {
-                            'Steel': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-                            'Lumber': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-                            'None': 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-500'
-                        };
-                        
-                        return `
-                        <div class="feed-item bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="flex flex-col">
-                                    <span class="text-[10px] font-black text-blue-500 uppercase tracking-tighter">${t.order}</span>
-                                    <div class="flex items-center gap-1 text-[8px] font-bold text-slate-400 uppercase">
-                                        <span>${t.pDate}</span>
-                                        <span class="text-slate-300">/</span>
-                                        <span class="text-rose-500/70">${t.dDate}</span>
-                                    </div>
-                                </div>
-                                <span class="px-2 py-1 rounded-md text-[8px] font-black uppercase border dark:border-slate-700 ${tarpColors[t.tarp] || tarpColors['None']}">${t.tarp} TARP</span>
-                            </div>
-
-                            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                                <div class="flex-1">
-                                    <span class="text-[7px] font-bold text-emerald-500 uppercase block leading-none mb-1">Origin</span>
-                                    <p class="text-[10px] font-black uppercase truncate">${t.pCity}</p>
-                                </div>
-                                <div class="flex items-center text-slate-300">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-                                </div>
-                                <div class="flex-1 text-right">
-                                    <span class="text-[7px] font-bold text-rose-500 uppercase block leading-none mb-1">Dest</span>
-                                    <p class="text-[10px] font-black uppercase truncate">${t.dCity}</p>
-                                </div>
-                            </div>
-
-                            <div class="mt-3 pt-3 border-t dark:border-slate-800 flex justify-between items-center">
-                                <div class="flex gap-4">
-                                    <div class="flex flex-col">
-                                        <span class="text-[7px] font-bold text-slate-400 uppercase italic">Unit</span>
-                                        <span class="text-[9px] font-black uppercase text-slate-600 dark:text-slate-400">${t.truck}</span>
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span class="text-[7px] font-bold text-slate-400 uppercase italic">Trailer</span>
-                                        <span class="text-[9px] font-black uppercase text-slate-600 dark:text-slate-400">${t.trailer}</span>
-                                    </div>
-                                </div>
-                                <div class="text-[8px] font-bold text-slate-500 uppercase tracking-tight">
-                                    ${t.codriver === 'SOLO' || !t.codriver ? 'Solo Operator' : 'Team: ' + t.codriver}
-                                </div>
-                            </div>
-                        </div>`;
-                    }).join('');
-                } catch (e) { 
-                    list.innerHTML = `<p class="text-rose-500 text-[10px] text-center py-10 font-black uppercase">Archive Sync Failed</p>`; 
-                }
             },
 
             async submit(e) {
@@ -262,24 +164,9 @@
                         body: JSON.stringify({ message: `Log: ${newEntry.order}`, content: btoa(JSON.stringify(trips, null, 2)), sha: fileData.sha })
                     });
                     if(!update.ok) throw new Error();
+                    alert("ENTRY LOGGED");
                     document.getElementById('log-form').reset();
-                    this.refresh();
-                } catch (e) { alert("ERROR SAVING"); } finally { btn.disabled = false; btn.innerText = "Submit to Archive"; }
-            },
-
-            async generatePDF() {
-                const month = document.getElementById('report-month').value;
-                if(!month) return alert("Select month");
-                try {
-                    const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, { headers: { 'Authorization': `token ${this.config.token}` } });
-                    const data = await res.json();
-                    const filtered = JSON.parse(atob(data.content)).filter(t => t.pDate.startsWith(month));
-                    if(filtered.length === 0) return alert("No logs found");
-                    const doc = new window.jspdf.jsPDF('l', 'mm', 'a4');
-                    doc.setFontSize(22); doc.text("FLEET TRIP LOG ARCHIVE", 14, 20);
-                    doc.autoTable({ startY: 35, head: [['ID', 'PICKUP', 'FROM', 'DELIVERY', 'TO', 'TRK', 'TRL', 'TARP', 'CREW']], body: filtered.map(t => [t.order, t.pDate, t.pCity, t.dDate, t.dCity, t.truck, t.trailer, t.tarp, t.codriver]), headStyles: { fillColor: [15, 23, 42] } });
-                    doc.save(`Log_${month}.pdf`);
-                } catch (e) { alert("PDF Error"); }
+                } catch (e) { alert("ERROR SAVING"); } finally { btn.disabled = false; btn.innerText = "Submit Log to Cloud"; }
             },
 
             applyTheme() {
