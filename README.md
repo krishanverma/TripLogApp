@@ -1,2 +1,2 @@
-# TripLog
+# TripLogApp
 save my personal triplogs
