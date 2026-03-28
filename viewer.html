@@ -55,6 +55,10 @@
         </details>
 
         <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-800 mb-6 space-y-4">
+            <div class="flex items-center gap-2 px-1">
+                <span class="text-[10px] font-black uppercase text-slate-500 tracking-[0.15em]">Total Loads Delivered:</span>
+                <span id="total-loads-count" class="text-xs font-black text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2.5 py-0.5 rounded-lg border border-blue-100 dark:border-blue-800/50 shadow-sm">0</span>
+            </div>
             <div class="w-full">
                 <label class="block text-[10px] font-black uppercase text-slate-500 mb-1 ml-1">Search Order # or Truck ID</label>
                 <input type="text" id="filter-search" oninput="VIEWER.applyFilter()" placeholder="Ex: LOAD-1234 or TRK-01..." class="w-full p-3 rounded-xl border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold outline-none focus:border-blue-500 transition-all">
@@ -141,6 +145,7 @@
                     });
                     const data = await res.json();
                     this.items = JSON.parse(atob(data.content)).reverse();
+                    document.getElementById('total-loads-count').innerText = this.items.length;
                     this.filteredItems = [...this.items];
                     this.render(this.filteredItems, this.currentLimit);
                     
