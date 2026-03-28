@@ -23,7 +23,10 @@
                             <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-600 mr-2"></span>
                             <span id="status-text" class="text-xs font-bold uppercase text-slate-400">Offline</span>
                         </div>
-                        <a href="viewer.html" class="text-xs font-black text-blue-400 uppercase tracking-widest hover:underline">View Load Database →</a>
+                        <div class="flex gap-3">
+                            <a href="viewer.html" class="text-xs font-black text-blue-400 uppercase tracking-widest hover:underline">Load Database</a>
+                            <a href="expenses.html" class="text-xs font-black text-emerald-500 uppercase tracking-widest hover:underline">Expenses</a>
+                        </div>
                     </div>
                 </div>
                 <button onclick="APP.toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 shadow-lg active:scale-90 transition-all">
@@ -43,7 +46,7 @@
             <form id="log-form" class="p-6 space-y-6">
                 <div class="border-l-4 border-blue-600 pl-4">
                     <label class="text-sm font-black text-blue-600 uppercase tracking-widest">Order #</label>
-                    <input type="text" id="order_number" required placeholder="LOAD-XXXX" class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-600 outline-none py-2 text-3xl font-black uppercase">
+                    <input type="text" id="order_number" required placeholder="Enter Order #" class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-600 outline-none py-2 text-3xl font-black lowercase">
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
