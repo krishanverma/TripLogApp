@@ -293,10 +293,18 @@
                     const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
                         headers: { 'Authorization': `token ${this.config.token}` }
                     });
-                    const fileData = await res.json();
-                    const trips = JSON.parse(atob(fileData.content));
+                    
+                    let trips = [];
+                    let sha = null;
+                    if (res.ok) {
+                        const fileData = await res.json();
+                        trips = JSON.parse(atob(fileData.content));
+                        sha = fileData.sha;
+                    }
                     
                     let newEntry = {
+                        id: crypto.randomUUID(),
+                        created_at: new Date().toISOString(),
                         truck: document.getElementById('truck').value.toUpperCase(),
                         trailer: document.getElementById('trailer').value.toUpperCase(),
                         tarp: document.querySelector('input[name="tarp_type"]:checked').value,

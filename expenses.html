@@ -257,6 +257,8 @@
                     }
 
                     const newEntry = {
+                        id: crypto.randomUUID(),
+                        created_at: new Date().toISOString(),
                         date: document.getElementById('exp_date').value,
                         amount: parseFloat(document.getElementById('exp_amount').value),
                         currency: document.querySelector('input[name="exp_currency"]:checked').value,
