@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Truck Log Pro | Expense Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        input[type="text"],
+        input[type="date"],
+        input[type="password"],
+        input[type="number"] {
+            font-size: 16px !important;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-500">
+
+    <div class="max-w-2xl mx-auto p-4 md:pt-10">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+
+            <header
+                class="bg-slate-900 dark:bg-black p-6 flex justify-between items-center border-b border-emerald-500/20">
+                <div>
+                    <h1 class="text-2xl font-black tracking-tighter italic uppercase text-emerald-500">Expenses</h1>
+                    <div id="status-bar" class="mt-1 flex items-center gap-3">
+                        <div class="inline-flex items-center px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                            <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-600 mr-2"></span>
+                            <span id="status-text" class="text-xs font-bold uppercase text-slate-400">Offline</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="index.html"
+                                class="text-xs font-black text-blue-400 uppercase tracking-widest hover:underline">Entry
+                                Terminal</a>
+                            <a href="viewer.html"
+                                class="text-xs font-black text-blue-400 uppercase tracking-widest hover:underline">Loads</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="EXPENSES.refresh()"
+                        class="p-2 bg-slate-800 rounded-lg border border-slate-700 active:scale-90 text-slate-400 hover:text-emerald-400 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                    <button onclick="EXPENSES.toggleTheme()"
+                        class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 shadow-lg active:scale-90 transition-all">
+                        <span id="theme-icon" class="text-lg">🌙</span>
+                    </button>
+                </div>
+            </header>
+
+            <details id="config-panel" class="bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-800 group">
+                <summary
+                    class="p-3 text-sm text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">
+                    Connection Settings</summary>
+                <div class="p-5 space-y-4">
+                    <input type="password" id="cfg-token"
+                        class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none"
+                        placeholder="GitHub Token">
+                    <input type="text" id="cfg-repo"
+                        class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none"
+                        placeholder="User/Repo">
+                    <button onclick="EXPENSES.saveConfig()"
+                        class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg">Verify
+                        Link</button>
+                </div>
+            </details>
+
+            <form id="expense-form" class="p-6 space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div
+                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                        <label class="text-[10px] font-black text-slate-500 uppercase mb-2 block">Date</label>
+                        <input type="date" id="exp_date" required
+                            class="w-full bg-transparent font-bold outline-none text-sm">
+                    </div>
+                    <div
+                        class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
+                        <label class="text-[10px] font-black text-emerald-600 uppercase mb-2 block">Amount</label>
+                        <input type="number" step="0.01" id="exp_amount" required placeholder="0.00"
+                            class="w-full bg-transparent font-black text-emerald-600 outline-none text-lg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                        <label
+                            class="text-[10px] font-black text-slate-500 uppercase mb-3 block text-center tracking-widest">Currency</label>
+                        <div class="flex justify-center gap-8">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="exp_currency" value="CAD" checked
+                                    onchange="EXPENSES.toggleCurrency()" class="sr-only peer">
+                                <div
+                                    class="px-4 py-2 rounded-lg border-2 border-slate-700 peer-checked:bg-blue-600 peer-checked:border-blue-500 text-xs font-black transition-all">
+                                    CAD</div>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="exp_currency" value="USD" onchange="EXPENSES.toggleCurrency()"
+                                    class="sr-only peer">
+                                <div
+                                    class="px-4 py-2 rounded-lg border-2 border-slate-700 peer-checked:bg-blue-600 peer-checked:border-blue-500 text-xs font-black transition-all">
+                                    USD</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="cad_conv_wrap"
+                        class="hidden p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30">
+                        <label class="text-[10px] font-black text-amber-600 uppercase mb-2 block">CAD Conv.
+                            (Total)</label>
+                        <input type="number" step="0.01" id="exp_cad_amount" placeholder="0.00"
+                            class="w-full bg-transparent font-black text-amber-600 outline-none text-lg">
+                    </div>
+                </div>
+
+                <input type="text" id="exp_note" placeholder="Description / Reference"
+                    class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm">
+                <button type="submit" id="submit-btn"
+                    class="w-full bg-emerald-600 py-4 rounded-2xl text-white font-black uppercase text-lg italic tracking-tighter shadow-xl hover:bg-emerald-500 active:scale-[0.98] transition-all border-b-4 border-emerald-800">Submit
+                    Expense</button>
+            </form>
+
+            <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-y dark:border-slate-800 space-y-4">
+                <div class="flex items-center gap-2 px-1">
+                    <span class="text-[10px] font-black uppercase text-slate-500 tracking-[0.15em]">Expenses
+                        Found:</span>
+                    <span id="total-expenses-count"
+                        class="text-xs font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/40 px-2.5 py-0.5 rounded-lg border border-emerald-100 dark:border-emerald-800/50 shadow-sm">0</span>
+                </div>
+                <div class="w-full">
+                    <label class="block text-[10px] font-black uppercase text-slate-500 mb-1 ml-1">Search
+                        Description</label>
+                    <input type="text" id="filter-search" oninput="EXPENSES.applyFilter()"
+                        placeholder="Ex: Fuel, Food, Repair..."
+                        class="w-full p-3 rounded-xl border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold outline-none focus:border-emerald-500 transition-all">
+                </div>
+                <div class="flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[140px]">
+                        <label class="block text-[10px] font-black uppercase text-slate-500 mb-1 ml-1">From Date</label>
+                        <input type="date" id="filter-start"
+                            class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="flex-1 min-w-[140px]">
+                        <label class="block text-[10px] font-black uppercase text-slate-500 mb-1 ml-1">To Date</label>
+                        <input type="date" id="filter-end"
+                            class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="EXPENSES.applyFilter()"
+                            class="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 rounded-xl text-white font-black uppercase text-[10px] tracking-widest hover:bg-emerald-500 transition-all shadow-md active:scale-95">Filter</button>
+                        <button onclick="EXPENSES.clearFilter()"
+                            class="flex-1 sm:flex-none px-4 py-2.5 bg-slate-200 dark:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-300 font-black uppercase text-[10px] tracking-widest hover:bg-slate-300 dark:hover:bg-slate-600 transition-all active:scale-95">Clear</button>
+                        <button onclick="EXPENSES.exportPDF()"
+                            class="flex-1 sm:flex-none px-4 py-2.5 bg-amber-600 rounded-xl text-white font-black uppercase text-[10px] tracking-widest hover:bg-amber-500 transition-all shadow-md active:scale-95">PDF</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-50/50 dark:bg-black/20">
+                <div id="expense-list" class="space-y-3">
+                    <!-- Expenses will render here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const EXPENSES = {
+            config: { token: '', repo: '' },
+            items: [],
+            filteredItems: [],
+            currentLimit: 10,
+
+            init() {
+                this.loadSettings();
+                this.applyTheme();
+                if (this.config.token && this.config.repo) {
+                    this.refresh();
+                } else {
+                    this.updateStatus('offline', 'Setup Required');
+                    document.getElementById('config-panel').open = true;
+                }
+            },
+
+            loadSettings() {
+                this.config.token = localStorage.getItem('tlp_token') || '';
+                this.config.repo = localStorage.getItem('tlp_repo') || '';
+                document.getElementById('cfg-token').value = this.config.token;
+                document.getElementById('cfg-repo').value = this.config.repo;
+            },
+
+            saveConfig() {
+                const token = document.getElementById('cfg-token').value.trim();
+                const repo = document.getElementById('cfg-repo').value.trim();
+                localStorage.setItem('tlp_token', token);
+                localStorage.setItem('tlp_repo', repo);
+                this.config.token = token;
+                this.config.repo = repo;
+                this.refresh();
+            },
+
+            updateStatus(type, msg) {
+                const dot = document.getElementById('status-dot');
+                const txt = document.getElementById('status-text');
+                const colors = { online: 'bg-emerald-500 animate-pulse', testing: 'bg-amber-500 animate-bounce', error: 'bg-rose-600', offline: 'bg-slate-600' };
+                dot.className = `w-1.5 h-1.5 rounded-full mr-2 ${colors[type] || colors.offline}`;
+                txt.innerText = msg;
+            },
+
+            async refresh() {
+                this.updateStatus('testing', 'Syncing...');
+                try {
+                    const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/expenses.json`, {
+                        headers: { 'Authorization': `token ${this.config.token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.items = JSON.parse(atob(data.content)).reverse();
+                        this.filteredItems = [...this.items];
+                        this.render(this.filteredItems, this.currentLimit);
+                        this.updateStatus('online', 'Database Active');
+                    } else if (res.status === 404) {
+                        this.items = [];
+                        this.render();
+                        this.updateStatus('online', 'New File Ready');
+                    }
+                } catch (e) { this.updateStatus('error', 'Link Error'); }
+            },
+
+            async submit(e) {
+                e.preventDefault();
+                const btn = document.getElementById('submit-btn');
+                btn.disabled = true;
+                btn.innerText = "SAVING...";
+                try {
+                    const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/expenses.json`, {
+                        headers: { 'Authorization': `token ${this.config.token}` }
+                    });
+
+                    let currentExpenses = [];
+                    let sha = null;
+                    if (res.ok) {
+                        const fileData = await res.json();
+                        currentExpenses = JSON.parse(atob(fileData.content));
+                        sha = fileData.sha;
+                    }
+
+                    const newEntry = {
+                        date: document.getElementById('exp_date').value,
+                        amount: parseFloat(document.getElementById('exp_amount').value),
+                        currency: document.querySelector('input[name="exp_currency"]:checked').value,
+                        cadAmount: document.querySelector('input[name="exp_currency"]:checked').value === 'USD' ? parseFloat(document.getElementById('exp_cad_amount').value) : null,
+                        note: document.getElementById('exp_note').value || "No notes"
+                    };
+
+                    currentExpenses.push(newEntry);
+                    const update = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/expenses.json`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `token ${this.config.token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: `Expense: ${newEntry.note}`, content: btoa(JSON.stringify(currentExpenses, null, 2)), sha: sha })
+                    });
+                    if (!update.ok) throw new Error();
+                    document.getElementById('expense-form').reset();
+                    this.toggleCurrency();
+                    this.refresh();
+                } catch (e) { alert("ERROR SAVING"); } finally { btn.disabled = false; btn.innerText = "Save Expense"; }
+            },
+
+            toggleCurrency() {
+                const isUSD = document.querySelector('input[name="exp_currency"]:checked').value === 'USD';
+                const wrap = document.getElementById('cad_conv_wrap');
+                const input = document.getElementById('exp_cad_amount');
+                wrap.classList.toggle('hidden', !isUSD);
+                input.required = isUSD;
+            },
+
+            applyFilter() {
+                const start = document.getElementById('filter-start').value;
+                const end = document.getElementById('filter-end').value;
+                const search = document.getElementById('filter-search').value.toLowerCase().trim();
+
+                this.filteredItems = this.items.filter(t => {
+                    if (start && t.date < start) return false;
+                    if (end && t.date > end) return false;
+                    if (search && !t.note.toLowerCase().includes(search)) return false;
+                    return true;
+                });
+
+                this.currentLimit = 10;
+                this.render(this.filteredItems, this.currentLimit);
+            },
+
+            clearFilter() {
+                document.getElementById('filter-start').value = '';
+                document.getElementById('filter-end').value = '';
+                document.getElementById('filter-search').value = '';
+                this.filteredItems = [...this.items];
+                this.currentLimit = 10;
+                this.render(this.filteredItems, this.currentLimit);
+            },
+            async exportPDF() {
+                if (this.filteredItems.length === 0) return alert("No data to export! Filter some entries first.");
+
+                const btn = document.querySelector('button[onclick="EXPENSES.exportPDF()"]');
+                const originalText = btn.innerText;
+                btn.innerText = "...";
+
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'mm', 'a4');
+
+                    // Helper to format date as "MMM DD, YYYY"
+                    const formatPrettyDate = (dateStr) => {
+                        if (!dateStr) return "";
+                        const date = new Date(dateStr + 'T00:00:00');
+                        return date.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: '2-digit',
+                            year: 'numeric'
+                        });
+                    };
+
+                    const start = document.getElementById('filter-start').value;
+                    const end = document.getElementById('filter-end').value;
+
+                    // Generate the range string with short month names
+                    let dateRangeDisplay = "";
+                    if (start && end) {
+                        dateRangeDisplay = `${formatPrettyDate(start)} to ${formatPrettyDate(end)}`;
+                    } else if (start || end) {
+                        dateRangeDisplay = formatPrettyDate(start || end);
+                    } else {
+                        dateRangeDisplay = formatPrettyDate(new Date().toISOString().split('T')[0]);
+                    }
+
+                    let currentY = 15;
+                    const usdItems = this.filteredItems.filter(i => i.currency === 'USD');
+                    const cadItems = this.filteredItems.filter(i => i.currency === 'CAD' || !i.currency);
+
+                    const addSection = (items, currencyType) => {
+                        if (items.length === 0) return;
+
+
+                        if (currentY > 15) {
+                            doc.addPage();
+                            currentY = 15;
+                        }
+
+                        // Header Section [cite: 1, 2, 3, 9, 10, 11]
+                        currentY = 40;
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(10);
+                        doc.text('EFL TRANSPORT INC.', 14, currentY);
+                        doc.text('TEL: 204-416-7460', 14, currentY + 5);
+                        doc.text('accounting@eflfreight.com', 14, currentY + 10);
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(18);
+                        doc.text(`EXPENSE SHEET ${currencyType}`, 105, currentY + 25, { align: 'center' }); // [cite: 6, 14]
+
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(11);
+                        const midLineY = currentY + 35;
+                        const centerX = 105;
+
+                        // 1. Define the segments
+                        const s1 = "Name- ";
+                        const s2 = "Krishan Verma  ";
+                        const s3 = "Truck- ";
+                        const s4 = "__________  ";
+                        const s5 = "Date- ";
+                        const s6 = dateRangeDisplay;
+
+                        // 2. Calculate total width for centering
+                        doc.setFont('helvetica', 'bold');
+                        const w1 = doc.getTextWidth(s1);
+                        const w3 = doc.getTextWidth(s3);
+                        const w5 = doc.getTextWidth(s5);
+
+                        doc.setFont('helvetica', 'normal');
+                        const w2 = doc.getTextWidth(s2);
+                        const w4 = doc.getTextWidth(s4);
+                        const w6 = doc.getTextWidth(s6);
+
+                        const totalWidth = w1 + w2 + w3 + w4 + w5 + w6;
+                        let currentX = centerX - (totalWidth / 2);
+
+                        // 3. Draw segments one by one
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(s1, currentX, midLineY);
+                        currentX += w1;
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(s2, currentX, midLineY);
+                        // Underline Name
+                        doc.line(currentX, midLineY + 1, currentX + w2 - 2, midLineY + 1);
+                        currentX += w2;
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(s3, currentX, midLineY);
+                        currentX += w3;
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(s4, currentX, midLineY);
+                        currentX += w4;
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(s5, currentX, midLineY);
+                        currentX += w5;
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(s6, currentX, midLineY);
+                        // Underline Date
+                        doc.line(currentX, midLineY + 1, currentX + w6, midLineY + 1);
+                        
+                        /*
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(11);
+                        const metaText = `Name- Krishan Verma  Truck- __________  Date- ${dateRangeDisplay}`;
+                        doc.text(metaText, 105, currentY + 35, { align: 'center' });
+
+                    */
+                        let tableColumn, tableRows;
+                        if (currencyType === 'USD') {
+                            // USD Table Format [cite: 5]
+                            tableColumn = ["DATE", "EXPENSE TYPE", "TOTAL USD AMOUNT", "TOTAL CAD AMOUNT"];
+                            tableRows = items.map(t => [
+                                formatPrettyDate(t.date),
+                                t.note,
+                                `$${t.amount.toFixed(2)}`,
+                                t.cadAmount ? `$${t.cadAmount.toFixed(2)}` : '-'
+                            ]);
+                        } else {
+                            // CAD Table Format [cite: 13]
+                            tableColumn = ["DATE", "EXPENSE TYPE", "GST", "TOTAL"];
+                            tableRows = items.map(t => [
+                                formatPrettyDate(t.date),
+                                t.note,
+                                "-",
+                                `$${t.amount.toFixed(2)}`
+                            ]);
+                        }
+
+                        doc.autoTable({
+                            head: [tableColumn],
+                            body: tableRows,
+                            startY: currentY + 50,
+                            theme: 'grid',
+                            styles: { fontSize: 9, cellPadding: 3 },
+                            headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], lineWidth: 0.1 },
+                            didDrawPage: (data) => { currentY = data.cursor.y + 10; }
+                        });
+                    };
+
+                    addSection(usdItems, 'USD');
+                    addSection(cadItems, 'CAD');
+
+                    doc.save(`EFL_Report_${dateRangeDisplay.replace(/ /g, '_').replace(/,/g, '')}.pdf`);
+
+                } catch (err) {
+                    console.error("Export Error:", err);
+                    alert("Failed to generate PDF");
+                } finally {
+                    btn.innerText = originalText;
+                }
+            },
+
+            render(items = this.items, limit = this.currentLimit) {
+                const list = document.getElementById('expense-list');
+                document.getElementById('total-expenses-count').innerText = items.length;
+                const displayItems = items.slice(0, limit);
+                if (displayItems.length === 0) {
+                    list.innerHTML = `<div class="text-center py-10 opacity-30 text-xs font-black uppercase tracking-widest">No Expenses Found</div>`;
+                    return;
+                }
+                list.innerHTML = displayItems.map(t => `
+                <div class="flex justify-between items-center p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${t.date}</span>
+                        <span class="font-bold text-sm">${t.note}</span>
+                        <span class="text-[10px] font-bold text-emerald-500 uppercase">${t.currency ? t.currency : ''}</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-black text-emerald-600">$${t.amount.toFixed(2)}</div>
+                        ${t.cadAmount ? `<div class="text-[10px] font-bold text-amber-600 italic">→ $${t.cadAmount.toFixed(2)} CAD</div>` : ''}
+                    </div>
+                </div>`).join('');
+
+                if (limit < items.length) {
+                    list.innerHTML += `
+                    <div class="text-center pt-6">
+                        <button onclick="EXPENSES.loadMore()" class="bg-emerald-600 py-3 px-6 rounded-xl text-white font-black uppercase text-sm tracking-widest shadow-lg hover:bg-emerald-500 active:scale-[0.98] transition-all">Load More Entries</button>
+                    </div>`;
+                }
+            },
+
+            loadMore() {
+                this.currentLimit += 10;
+                this.render(this.filteredItems, this.currentLimit);
+            },
+
+            applyTheme() {
+                const isDark = localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
+                document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+            },
+
+            toggleTheme() {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+            }
+        };
+        document.getElementById('expense-form').addEventListener('submit', (e) => EXPENSES.submit(e));
+        EXPENSES.init();
+    </script>
+</body>
+
+</html>

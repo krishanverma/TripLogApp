@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Truck Log Pro | Entry Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <style>
+        input[type="text"], input[type="date"], input[type="password"] { font-size: 16px !important; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-500">
+
+    <div class="max-w-2xl mx-auto p-4 md:pt-10">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+            
+            <header class="bg-slate-900 dark:bg-black p-6 flex justify-between items-center border-b border-blue-500/20">
+                <div>
+                    <h1 class="text-2xl font-black tracking-tighter italic uppercase text-blue-500">Truck Log Pro</h1>
+                    <div id="status-bar" class="mt-1 flex items-center gap-3">
+                        <div class="inline-flex items-center px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                            <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-600 mr-2"></span>
+                            <span id="status-text" class="text-xs font-bold uppercase text-slate-400">Offline</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="viewer.html" class="text-xs font-black text-blue-400 uppercase tracking-widest hover:underline">Load Database</a>
+                            <a href="expenses.html" class="text-xs font-black text-emerald-500 uppercase tracking-widest hover:underline">Expenses</a>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="APP.toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 shadow-lg active:scale-90 transition-all">
+                    <span id="theme-icon" class="text-lg">🌙</span>
+                </button>
+            </header>
+
+            <details id="config-panel" class="bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-800 group">
+                <summary class="p-3 text-sm text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">Connection Settings</summary>
+                <div class="p-5 space-y-4">
+                    <input type="password" id="cfg-token" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="GitHub Token">
+                    <input type="text" id="cfg-repo" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="User/Repo">
+                    <button onclick="APP.saveConfig()" class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg">Verify Link</button>
+                </div>
+            </details>
+
+            <form id="log-form" class="p-6 space-y-6">
+                <div class="border-l-4 border-blue-600 pl-4">
+                    <label class="text-sm font-black text-blue-600 uppercase tracking-widest">Order #</label>
+                    <input type="text" id="order_number" required placeholder="Enter Order #" class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-600 outline-none py-2 text-3xl font-black lowercase">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
+                        <label class="text-sm font-black text-emerald-600 uppercase mb-3 block">Pickup Details</label>
+                        <input type="date" id="pickup_date" required class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold mb-2 text-sm">
+                        <div class="relative">
+                            <input type="text" id="pickup_city" required placeholder="City, State" onblur="setTimeout(() => APP.clearSuggestions('pickup-suggestions'), 200)" oninput="APP.fetchSuggestions('pickup_city', 'pickup-suggestions')" class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm" autocomplete="off">
+                            <div id="pickup-suggestions" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30">
+                        <label class="text-sm font-black text-rose-600 uppercase mb-3 block">Delivery Details</label>
+                        <input type="date" id="delivery_date" required class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold mb-2 text-sm">
+                        <div class="relative">
+                            <input type="text" id="delivery_city" required placeholder="City, State" onblur="setTimeout(() => APP.clearSuggestions('delivery-suggestions'), 200)" oninput="APP.fetchSuggestions('delivery_city', 'delivery-suggestions')" class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm" autocomplete="off">
+                            <div id="delivery-suggestions" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="truck" required placeholder="Truck ID" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
+                    <input type="text" id="trailer" required placeholder="Trailer #" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
+                </div>
+
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                    <div class="flex justify-between items-center px-4">
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="None" checked class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">OFF</div><span class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">None</span></label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Steel" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">S</div><span class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">Steel</span></label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Lumber" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">L</div><span class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">Lumber</span></label>
+                    </div>
+                </div>
+
+                <input type="text" id="co_driver" placeholder="Co-Driver (Optional)" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm">
+                <button type="submit" id="submit-btn" class="w-full bg-blue-600 py-5 rounded-2xl text-white font-black uppercase text-lg italic tracking-tighter shadow-xl hover:bg-blue-500 active:scale-[0.98] transition-all border-b-4 border-blue-800">Submit Log</button>
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        const APP = {
+            config: { token: '', repo: '' },
+            stateMap: {
+                'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'District of Columbia': 'DC', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+                'Alberta': 'AB', 'British Columbia': 'BC', 'Manitoba': 'MB', 'New Brunswick': 'NB', 'Newfoundland and Labrador': 'NL', 'Nova Scotia': 'NS', 'Ontario': 'ON', 'Prince Edward Island': 'PE', 'Quebec': 'QC', 'Québec': 'QC', 'Saskatchewan': 'SK', 'Northwest Territories': 'NT', 'Nunavut': 'NU', 'Yukon': 'YT'
+            },
+            
+            init() {
+                this.loadSettings();
+                this.applyTheme();
+                if(this.config.token && this.config.repo) {
+                    this.verifyConnection(true);
+                } else {
+                    this.updateStatus('offline', 'Setup Required');
+                    document.getElementById('config-panel').open = true;
+                }
+            },
+
+            loadSettings() {
+                this.config.token = localStorage.getItem('tlp_token') || '';
+                this.config.repo = localStorage.getItem('tlp_repo') || '';
+                document.getElementById('cfg-token').value = this.config.token;
+                document.getElementById('cfg-repo').value = this.config.repo;
+            },
+
+            saveConfig() {
+                const token = document.getElementById('cfg-token').value.trim();
+                const repo = document.getElementById('cfg-repo').value.trim();
+                localStorage.setItem('tlp_token', token);
+                localStorage.setItem('tlp_repo', repo);
+                this.config.token = token;
+                this.config.repo = repo;
+                this.verifyConnection();
+            },
+
+            async verifyConnection(silent = false) {
+                this.updateStatus('testing', 'Verifying...');
+                try {
+                    const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
+                        headers: { 'Authorization': `token ${this.config.token}` }
+                    });
+                    if(res.ok) {
+                        this.updateStatus('online', 'Database Active');
+                        if(!silent) document.getElementById('config-panel').open = false;
+                    } else { throw new Error(); }
+                } catch (e) { this.updateStatus('error', 'Link Error'); }
+            },
+
+            updateStatus(type, msg) {
+                const dot = document.getElementById('status-dot');
+                const txt = document.getElementById('status-text');
+                const colors = { online: 'bg-blue-500 animate-pulse', testing: 'bg-amber-500 animate-bounce', error: 'bg-rose-600', offline: 'bg-slate-600' };
+                dot.className = `w-1.5 h-1.5 rounded-full mr-2 ${colors[type] || colors.offline}`;
+                txt.innerText = msg;
+            },
+
+            debounceTimer: null,
+            fetchSuggestions(inputId, listId) {
+                clearTimeout(this.debounceTimer);
+                const query = document.getElementById(inputId).value;
+                const list = document.getElementById(listId);
+                if (query.length < 3) { list.classList.add('hidden'); return; }
+                this.debounceTimer = setTimeout(async () => {
+                    try {
+                        // Photon API provides better ranking for cities/towns
+                        const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=10`);
+                        const data = await res.json();
+                        
+                        // Filter for features that are likely cities or towns in North America
+                        const filtered = data.features.filter(f => 
+                            (f.properties.type === 'city' || f.properties.type === 'town' || f.properties.osm_value === 'city' || f.properties.osm_value === 'town') &&
+                            (f.properties.countrycode === 'US' || f.properties.countrycode === 'CA')
+                        ).slice(0, 6);
+
+                        if (filtered.length > 0) {
+                            list.innerHTML = filtered.map(item => {
+                                const p = item.properties;
+                                const sAbbr = APP.stateMap[p.state] || p.state;
+                                const display = [p.name, sAbbr].filter(Boolean).join(", ");
+                                return `<div onclick="APP.selectSuggestion('${inputId}', '${listId}', '${display.replace(/'/g, "\\'")}')" class="p-3 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700 last:border-0 font-medium">${display}</div>`;
+                            }).join('');
+                            list.classList.remove('hidden');
+                        } else { list.classList.add('hidden'); }
+                    } catch (e) { console.error(e); }
+                }, 400);
+            },
+
+            selectSuggestion(inputId, listId, value) {
+                document.getElementById(inputId).value = value;
+                document.getElementById(listId).classList.add('hidden');
+            },
+
+            clearSuggestions(listId) {
+                document.getElementById(listId).classList.add('hidden');
+            },
+
+            async submit(e) {
+                e.preventDefault();
+                const btn = document.getElementById('submit-btn');
+                btn.disabled = true;
+                btn.innerText = "UPLOADING...";
+                try {
+                    const res = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
+                        headers: { 'Authorization': `token ${this.config.token}` }
+                    });
+                    const fileData = await res.json();
+                    const trips = JSON.parse(atob(fileData.content));
+                    const newEntry = {
+                        order: document.getElementById('order_number').value.toUpperCase(),
+                        pDate: document.getElementById('pickup_date').value,
+                        pCity: document.getElementById('pickup_city').value,
+                        dDate: document.getElementById('delivery_date').value,
+                        dCity: document.getElementById('delivery_city').value,
+                        truck: document.getElementById('truck').value.toUpperCase(),
+                        trailer: document.getElementById('trailer').value.toUpperCase(),
+                        tarp: document.querySelector('input[name="tarp_type"]:checked').value,
+                        codriver: document.getElementById('co_driver').value || "SOLO"
+                    };
+                    trips.push(newEntry);
+                    const update = await fetch(`https://api.github.com/repos/${this.config.repo}/contents/trips.json`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `token ${this.config.token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: `Log: ${newEntry.order}`, content: btoa(JSON.stringify(trips, null, 2)), sha: fileData.sha })
+                    });
+                    if(!update.ok) throw new Error();
+                    alert("ENTRY LOGGED");
+                    document.getElementById('log-form').reset();
+                } catch (e) { alert("ERROR SAVING"); } finally { btn.disabled = false; btn.innerText = "Submit Log to Cloud"; }
+            },
+
+            applyTheme() {
+                const isDark = localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
+                document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+            },
+
+            toggleTheme() {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+            }
+        };
+        document.getElementById('log-form').addEventListener('submit', (e) => APP.submit(e));
+        APP.init();
+    </script>
+</body>
+</html>
