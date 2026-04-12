@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Truck Log Pro | Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <style>
+        .test-pass { color: #10b981; }
+        .test-fail { color: #f43f5e; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 p-8 font-mono">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-10 border-b border-slate-800 pb-6 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-black tracking-tighter uppercase text-blue-500 italic">Test Runner</h1>
+                <p class="text-slate-500 text-xs mt-2 uppercase tracking-widest">System Validation Suite v1.0</p>
+            </div>
+            <div id="summary" class="text-right">
+                <span id="pass-count" class="text-emerald-500 font-bold">0</span> Passed | 
+                <span id="fail-count" class="text-rose-500 font-bold">0</span> Failed
+            </div>
+        </header>
+
+        <div id="results" class="space-y-2">
+            <!-- Logs will appear here -->
+        </div>
+
+        <!-- Hidden Sandbox for DOM-dependent tests -->
+        <div id="sandbox" class="hidden">
+            <span id="status-dot"></span>
+            <span id="status-text"></span>
+            <span id="theme-icon"></span>
+            <input id="checkin_date" value="2023-10-01">
+            <input id="checkin_time" value="08:00">
+            <input id="checkout_date" value="2023-10-01">
+            <input id="checkout_time" value="12:30">
+            <div id="local-hours-display"></div>
+            
+            <input id="filter-start"><input id="filter-end"><input id="filter-search">
+            <div id="expense-list"></div>
+            <div id="history-list"></div>
+            <div id="total-expenses-count"></div>
+            <div id="total-loads-count"></div>
+
+            <input type="radio" name="exp_currency" value="CAD" checked>
+            <input type="radio" name="exp_currency" value="USD">
+            <div id="cad_conv_wrap"></div>
+            <input id="exp_cad_amount">
+            
+            <!-- Settings and Form elements for Integration Testing -->
+            <details id="config-panel"><input id="cfg-token"><input id="cfg-repo"></details>
+            <form id="log-form"></form>
+            <form id="expense-form">
+                <input id="exp_date">
+                <input id="exp_amount">
+                <input id="exp_note">
+            </form>
+            <input id="order_number" value="TEST-ORDER-123">
+            <input id="pickup_date" value="2023-11-01">
+            <input id="pickup_city" value="Winnipeg, MB">
+            <input id="delivery_date" value="2023-11-02">
+            <input id="delivery_city" value="Toronto, ON">
+            <input id="truck" value="UNIT-01">
+            <input id="trailer" value="UNIT-53">
+            <input type="radio" name="tarp_type" value="None">
+            <input type="radio" name="tarp_type" value="Steel" checked>
+            <input type="radio" name="tarp_type" value="Lumber">
+            <input id="co_driver" value="None">
+            <button id="submit-btn"></button>
+
+            <button onclick="EXPENSES.exportPDF()">Export</button>
+            <button onclick="VIEWER.exportPDF()">Export</button>
+        </div>
+    </div>
+
+    <!-- Load App Scripts -->
+    <script src="github.js"></script>
+    <script src="ui-utils.js"></script>
+    <script src="expenses.js"></script>
+    <script src="app.js"></script>
+    <script src="viewer.js"></script>
+    <!-- Load Test Engine -->
+    <script src="tests.js"></script>
+    <script src="logging-test.js"></script>
+</body>
+</html>
