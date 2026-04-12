@@ -186,7 +186,7 @@ const VIEWER = {
 
             // Main Data Table
             const tableColumn = ["Order#", "Date", "Pick Up City", "Date", "Deliver City", "Truck", "Trailer", "Tarp", "Co-Driver"];
-            const tableRows = this.filteredItems.map(t => [
+            const tableRows = [...this.filteredItems].reverse().map(t => [
                 t.order,
                 formatDate(t.pDate),
                 t.pCity,

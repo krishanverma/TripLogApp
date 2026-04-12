@@ -149,8 +149,9 @@ const EXPENSES = {
             const start = document.getElementById('filter-start').value;
             const end = document.getElementById('filter-end').value;
             let dateRangeDisplay = (start || end) ? `${formatPrettyDate(start)} to ${formatPrettyDate(end)}` : formatPrettyDate(new Date().toISOString().split('T')[0]);
-            const usdItems = this.filteredItems.filter(i => i.currency === 'USD');
-            const cadItems = this.filteredItems.filter(i => i.currency === 'CAD' || !i.currency);
+            const chronoItems = [...this.filteredItems].reverse();
+            const usdItems = chronoItems.filter(i => i.currency === 'USD');
+            const cadItems = chronoItems.filter(i => i.currency === 'CAD' || !i.currency);
             let currentY = 15;
 
             const addSection = (items, currencyType) => {
