@@ -163,20 +163,19 @@ const EXPENSES = {
                 doc.text('TEL: 204-416-7460', 14, currentY + 5);
                 doc.text('accounting@eflfreight.com', 14, currentY + 10);
                 doc.setFontSize(18).text(`EXPENSE SHEET ${currencyType}`, 105, currentY + 25, { align: 'center' });
+                
                 const midLineY = currentY + 35;
-                const centerX = 105;
-                const s1 = "Name- ", s2 = "Krishan Verma  ", s3 = "Truck- ", s4 = "__________  ", s5 = "Date- ", s6 = dateRangeDisplay;
-                doc.setFont('helvetica', 'bold');
-                const w1 = doc.getTextWidth(s1), w3 = doc.getTextWidth(s3), w5 = doc.getTextWidth(s5);
-                doc.setFont('helvetica', 'normal');
-                const w2 = doc.getTextWidth(s2), w4 = doc.getTextWidth(s4), w6 = doc.getTextWidth(s6);
-                let currentX = centerX - ((w1+w2+w3+w4+w5+w6) / 2);
-                doc.setFont('helvetica', 'bold').text(s1, currentX, midLineY); currentX += w1;
-                doc.setFont('helvetica', 'normal').text(s2, currentX, midLineY); doc.line(currentX, midLineY + 1, currentX + w2 - 2, midLineY + 1); currentX += w2;
-                doc.setFont('helvetica', 'bold').text(s3, currentX, midLineY); currentX += w3;
-                doc.setFont('helvetica', 'normal').text(s4, currentX, midLineY); currentX += w4;
-                doc.setFont('helvetica', 'bold').text(s5, currentX, midLineY); currentX += w5;
-                doc.setFont('helvetica', 'normal').text(s6, currentX, midLineY); doc.line(currentX, midLineY + 1, currentX + w6, midLineY + 1);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold').text("Name- ", 14, midLineY);
+                doc.setFont('helvetica', 'normal').text("Krishan Verma", 28, midLineY);
+                doc.line(28, midLineY + 1, 60, midLineY + 1);
+
+                doc.setFont('helvetica', 'bold').text("Truck- ", 75, midLineY);
+                doc.setFont('helvetica', 'normal').text("__________", 90, midLineY);
+
+                doc.setFont('helvetica', 'bold').text("Date- ", 135, midLineY);
+                doc.setFont('helvetica', 'normal').text(dateRangeDisplay, 148, midLineY);
+                doc.line(148, midLineY + 1, 148 + doc.getTextWidth(dateRangeDisplay), midLineY + 1);
                 
                 let tableColumn = currencyType === 'USD' ? ["DATE", "EXPENSE TYPE", "TOTAL USD AMOUNT", "TOTAL CAD AMOUNT"] : ["DATE", "EXPENSE TYPE", "GST", "TOTAL"];
                 let tableRows = items.map(t => currencyType === 'USD' ? [formatPrettyDate(t.date), t.note, `$${t.amount.toFixed(2)}`, t.cadAmount ? `$${t.cadAmount.toFixed(2)}` : '-'] : [formatPrettyDate(t.date), t.note, "-", `$${t.amount.toFixed(2)}`]);
