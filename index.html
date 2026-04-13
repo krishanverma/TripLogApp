@@ -93,6 +93,12 @@
                     </div>
                 </div>
 
+                <!-- Distance Estimate Display -->
+                <div id="miles-estimate-container" class="hidden px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30 flex justify-between items-center">
+                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Estimated Trip Distance</span>
+                    <span id="estimated-miles" class="text-lg font-black text-blue-600 italic">0 Miles</span>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <input type="text" id="truck" required placeholder="Truck ID" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
                     <input type="text" id="trailer" required placeholder="Trailer #" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">

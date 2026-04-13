@@ -6,6 +6,9 @@ const APP = {
     config: { token: '', repo: '' },
     isLocalWork: false,
     dbFile: 'trips.json',
+    milesFile: 'miles.json',
+    pickupCoords: null,
+    deliveryCoords: null,
     stateMap: {
         'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'District of Columbia': 'DC', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
         'Alberta': 'AB', 'British Columbia': 'BC', 'Manitoba': 'MB', 'New Brunswick': 'NB', 'Newfoundland and Labrador': 'NL', 'Nova Scotia': 'NS', 'Ontario': 'ON', 'Prince Edward Island': 'PE', 'Quebec': 'QC', 'Québec': 'QC', 'Saskatchewan': 'SK', 'Northwest Territories': 'NT', 'Nunavut': 'NU', 'Yukon': 'YT'
@@ -62,6 +65,12 @@ const APP = {
     fetchSuggestions(inputId, listId) {
         clearTimeout(this.debounceTimer);
         const query = document.getElementById(inputId).value;
+
+        // Clear coords and hide display if user is typing
+        if (inputId === 'pickup_city') this.pickupCoords = null;
+        if (inputId === 'delivery_city') this.deliveryCoords = null;
+        document.getElementById('miles-estimate-container').classList.add('hidden');
+
         const list = document.getElementById(listId);
         
         if (query.length < 3) { 
@@ -79,7 +88,8 @@ const APP = {
                         const p = item.properties;
                         const sAbbr = APP.stateMap[p.state] || p.state;
                         const display = [p.name, sAbbr].filter(Boolean).join(", ");
-                        return `<div onclick="APP.selectSuggestion('${inputId}', '${listId}', '${display.replace(/'/g, "\\'")}')" class="p-3 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700 last:border-0 font-medium">${display}</div>`;
+                        const [lon, lat] = item.geometry.coordinates;
+                        return `<div onclick="APP.selectSuggestion('${inputId}', '${listId}', '${display.replace(/'/g, "\\'")}', ${lon}, ${lat})" class="p-3 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700 last:border-0 font-medium">${display}</div>`;
                     }).join('');
                     list.classList.remove('hidden');
                 } else { list.classList.add('hidden'); }
@@ -87,13 +97,37 @@ const APP = {
         }, 400);
     },
 
-    selectSuggestion(inputId, listId, value) {
+    selectSuggestion(inputId, listId, value, lon, lat) {
         document.getElementById(inputId).value = value;
         document.getElementById(listId).classList.add('hidden');
+
+        if (inputId === 'pickup_city') this.pickupCoords = [lon, lat];
+        if (inputId === 'delivery_city') this.deliveryCoords = [lon, lat];
+
+        this.updateDistance();
     },
 
     clearSuggestions(listId) {
         document.getElementById(listId).classList.add('hidden');
+    },
+
+    async updateDistance() {
+        if (!this.pickupCoords || !this.deliveryCoords) return;
+
+        const display = document.getElementById('estimated-miles');
+        const container = document.getElementById('miles-estimate-container');
+
+        try {
+            const url = `https://router.project-osrm.org/route/v1/driving/${this.pickupCoords[0]},${this.pickupCoords[1]};${this.deliveryCoords[0]},${this.deliveryCoords[1]}?overview=false`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.code === 'Ok' && data.routes.length > 0) {
+                const miles = (data.routes[0].distance * 0.000621371).toFixed(0);
+                display.innerText = `${miles} MILES`;
+                container.classList.remove('hidden');
+            }
+        } catch (e) { console.error("Distance error:", e); }
     },
 
     // --- Local Work vs Standard Trip Toggle ---
@@ -109,6 +143,7 @@ const APP = {
         const localFields = document.getElementById('local-work-fields');
         const truckField = document.getElementById('truck');
         const trailerField = document.getElementById('trailer');
+        const distanceContainer = document.getElementById('miles-estimate-container');
         
         if(this.isLocalWork) {
             orderInput.value = "LOCAL WORK"; orderInput.readOnly = true;
@@ -117,6 +152,7 @@ const APP = {
             ['pickup_city', 'delivery_city'].forEach(id => document.getElementById(id).required = false);
             ['checkin_date', 'checkin_time', 'checkout_date', 'checkout_time'].forEach(id => document.getElementById(id).required = true);
             truckField.required = false; trailerField.required = false;
+            distanceContainer.classList.add('hidden');
         } else {
             orderInput.value = ""; orderInput.readOnly = false;
             btn.classList.remove('bg-blue-600', 'text-white');
@@ -126,6 +162,7 @@ const APP = {
             truckField.required = true; trailerField.required = true;
             const display = document.getElementById('local-hours-display');
             if(display) { display.innerText = "WAITING FOR TIME DATA..."; display.className = "text-center text-[10px] font-black uppercase tracking-[0.2em] py-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400"; }
+            if (this.pickupCoords && this.deliveryCoords) distanceContainer.classList.remove('hidden');
         }
     },
 
@@ -155,7 +192,9 @@ const APP = {
         const btn = document.getElementById('submit-btn');
         btn.disabled = true; btn.innerText = "UPLOADING...";
         try {
+            // Fetch both trips and miles data
             const { content: trips, sha } = await GITHUB.fetchFile(this.config.repo, this.dbFile, this.config.token);
+            let { content: milesMap, sha: milesSha } = await GITHUB.fetchFile(this.config.repo, this.milesFile, this.config.token);
 
             let newEntry = {
                 id: crypto.randomUUID(), created_at: new Date().toISOString(),
@@ -176,15 +215,29 @@ const APP = {
                 newEntry.order = document.getElementById('order_number').value.toUpperCase();
                 newEntry.pDate = document.getElementById('pickup_date').value; newEntry.pCity = document.getElementById('pickup_city').value;
                 newEntry.dDate = document.getElementById('delivery_date').value; newEntry.dCity = document.getElementById('delivery_city').value;
+
+                // Handle estimated miles logging to separate file
+                const estMilesText = document.getElementById('estimated-miles').innerText;
+                if (estMilesText && estMilesText !== "0 MILES") {
+                    if (Array.isArray(milesMap)) milesMap = {}; // Initialize if new file
+                    milesMap[newEntry.id] = estMilesText.replace(' MILES', '');
+                }
             }
 
             // Update local state and push to cloud
             trips.push(newEntry);
+            if (!this.isLocalWork && Object.keys(milesMap).length > 0) {
+                await GITHUB.saveFile(this.config.repo, this.milesFile, this.config.token, milesMap, `Miles for: ${newEntry.order}`, milesSha);
+            }
+            
             await GITHUB.saveFile(this.config.repo, this.dbFile, this.config.token, trips, `Log: ${newEntry.order}`, sha);
             
             alert("ENTRY LOGGED"); 
             if (this.isLocalWork) this.toggleLocalWork(); 
             document.getElementById('log-form').reset();
+            this.pickupCoords = null;
+            this.deliveryCoords = null;
+            document.getElementById('miles-estimate-container').classList.add('hidden');
         } catch (e) { alert("ERROR SAVING"); } finally { btn.disabled = false; btn.innerText = "Submit Log to Cloud"; }
     }
 };
