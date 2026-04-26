@@ -297,17 +297,17 @@ const VIEWER = {
 
         list.innerHTML = `
         <div class="overflow-x-auto">
-        <table class="w-full table-auto border-collapse bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <table class="w-full min-w-[800px] table-auto border-collapse bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <thead>
                 <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                     <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Order #</th>
                     <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Pickup</th>
                     <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Delivery</th>
-                    <th class="hidden sm:table-cell p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Truck</th>
-                    <th class="hidden md:table-cell p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Trailer #</th>
-                    <th class="hidden md:table-cell p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Tarp</th>
-                    <th class="hidden lg:table-cell p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Miles</th>
-                    <th class="hidden lg:table-cell p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Co-Driver</th>
+                    <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Truck</th>
+                    <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Trailer #</th>
+                    <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Tarp</th>
+                    <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Miles</th>
+                    <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Co-Driver</th>
                     <th class="p-3 text-right text-sm font-bold text-slate-700 dark:text-slate-300">Actions</th>
                 </tr>
             </thead>
@@ -328,13 +328,13 @@ const VIEWER = {
                         <div class="font-bold text-rose-600">${t.dDate}</div>
                         <div class="text-[10px] text-slate-600 dark:text-slate-400">${t.dCity}</div>
                     </td>
-                    <td class="hidden sm:table-cell p-2 sm:p-3 text-sm font-mono font-bold">${t.truck}</td>
-                    <td class="hidden md:table-cell p-2 sm:p-3 text-sm font-mono opacity-60">${t.trailer}</td>
-                    <td class="hidden md:table-cell p-2 sm:p-3 text-sm">
+                    <td class="p-2 sm:p-3 text-sm font-mono font-bold">${t.truck}</td>
+                    <td class="p-2 sm:p-3 text-sm font-mono opacity-60">${t.trailer}</td>
+                    <td class="p-2 sm:p-3 text-sm">
                         <span class="px-2 py-1 rounded text-xs font-bold uppercase ${tarpStyle}">${t.tarp}</span>
                     </td>
-                    <td class="hidden lg:table-cell p-2 sm:p-3 text-sm font-bold text-blue-500/80">${miles}</td>
-                    <td class="hidden lg:table-cell p-2 sm:p-3 text-sm">${t.codriver || 'N/A'}</td>
+                    <td class="p-2 sm:p-3 text-sm font-bold text-blue-500/80">${miles}</td>
+                    <td class="p-2 sm:p-3 text-sm">${t.codriver || 'N/A'}</td>
                     <td class="p-3 text-right">
                         <button onclick="VIEWER.deleteEntry('${t.id}')" class="text-rose-500 hover:text-rose-700 p-1 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
