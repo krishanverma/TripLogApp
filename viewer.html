@@ -24,7 +24,12 @@
         };
         firebase.initializeApp(firebaseConfig);
     </script>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Prevents iOS auto-zoom on focus for mobile inputs */
+        input[type="text"], input[type="date"], input[type="password"], input[type="number"], input[type="time"] { 
+            font-size: 16px !important; 
+        }
+    </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-500">
 

@@ -7,7 +7,12 @@
     <title>Truck Log Pro | Add Trip</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Prevents iOS auto-zoom on focus for mobile inputs */
+        input[type="text"], input[type="date"], input[type="password"], input[type="number"], input[type="time"] { 
+            font-size: 16px !important; 
+        }
+    </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
