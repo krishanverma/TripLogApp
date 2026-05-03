@@ -271,9 +271,12 @@ const APP = {
 
                 // Handle estimated miles logging to separate file
                 const estMilesText = document.getElementById('estimated-miles').innerText;
-                if (estMilesText && estMilesText !== "0 MILES") {
-                    if (Array.isArray(milesMap)) milesMap = {}; // Initialize if new file
-                    milesMap[newEntry.id] = estMilesText.replace(' MILES', '');
+                if (estMilesText) {
+                    const numericMiles = (estMilesText.match(/\d+/) || ["0"])[0];
+                    if (numericMiles !== "0") {
+                        if (Array.isArray(milesMap)) milesMap = {}; // Initialize if new file
+                        milesMap[newEntry.id] = numericMiles;
+                    }
                 }
             }
 
