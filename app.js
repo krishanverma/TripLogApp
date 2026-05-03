@@ -1,6 +1,6 @@
 /**
  * APP: Entry Terminal Logic
- * Handles new trip entries, local work toggles, and location autocomplete.
+ * Main controller for the trip logging interface, handling data entry, location geocoding, and distance calculation.
  */
 const APP = {
     config: { token: '', repo: '' },
@@ -9,13 +9,17 @@ const APP = {
     milesFile: 'miles.json',
     pickupCoords: null,
     deliveryCoords: null,
+    isPickupDone: false, // UI Toggle state
+    isDeliveryDone: false,
+    /** Mapping for Geocoding API state names to postal abbreviations */
     stateMap: {
         'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'District of Columbia': 'DC', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
         'Alberta': 'AB', 'British Columbia': 'BC', 'Manitoba': 'MB', 'New Brunswick': 'NB', 'Newfoundland and Labrador': 'NL', 'Nova Scotia': 'NS', 'Ontario': 'ON', 'Prince Edward Island': 'PE', 'Quebec': 'QC', 'Québec': 'QC', 'Saskatchewan': 'SK', 'Northwest Territories': 'NT', 'Nunavut': 'NU', 'Yukon': 'YT'
     },
     
-    // --- Initialization & Config ---
-
+    /**
+     * Boots the application, loads user settings, and verifies the database link.
+     */
     init() {
         this.loadSettings();
         UI.applyTheme();
@@ -27,6 +31,9 @@ const APP = {
         }
     },
 
+    /**
+     * Retrieves GitHub credentials from browser localStorage.
+     */
     loadSettings() {
         this.config.token = localStorage.getItem('tlp_token') || '';
         this.config.repo = localStorage.getItem('tlp_repo') || '';
@@ -34,6 +41,9 @@ const APP = {
         document.getElementById('cfg-repo').value = this.config.repo;
     },
 
+    /**
+     * Persists user configuration to localStorage and re-verifies the connection.
+     */
     saveConfig() {
         const token = document.getElementById('cfg-token').value.trim();
         const repo = document.getElementById('cfg-repo').value.trim();
@@ -46,6 +56,7 @@ const APP = {
 
     /**
      * Checks if the GitHub token and repo path are valid by attempting a fetch.
+     * @param {boolean} silent - If true, doesn't close the config panel automatically.
      */
     async verifyConnection(silent = false) {
         UI.updateStatus('testing', 'Verifying...');
@@ -58,9 +69,11 @@ const APP = {
 
     // --- Location Autocomplete ---
 
-    debounceTimer: null,
+    debounceTimer: null, // Timer to prevent excessive API calls while typing
+
     /**
      * Fetches city suggestions using the Photon (OpenStreetMap) API.
+     * Fired on input events for pickup/delivery city fields.
      */
     fetchSuggestions(inputId, listId) {
         clearTimeout(this.debounceTimer);
@@ -130,6 +143,34 @@ const APP = {
         } catch (e) { console.error("Distance error:", e); }
     },
 
+    // --- Status Toggles ---
+
+    /**
+     * Toggles the pickup confirmation state.
+     * Updates both the internal boolean and the button UI.
+     */
+    togglePickupStatus() {
+        this.isPickupDone = !this.isPickupDone;
+        const btn = document.getElementById('pickup-done-btn');
+        btn.innerText = `Pickup? = ${this.isPickupDone ? 'YES' : 'NO'}`;
+        btn.classList.toggle('bg-emerald-600', this.isPickupDone);
+        btn.classList.toggle('text-white', this.isPickupDone);
+        btn.classList.toggle('text-emerald-600', !this.isPickupDone);
+    },
+
+    /**
+     * Toggles the delivery confirmation state.
+     * Updates both the internal boolean and the button UI.
+     */
+    toggleDeliveryStatus() {
+        this.isDeliveryDone = !this.isDeliveryDone;
+        const btn = document.getElementById('delivery-done-btn');
+        btn.innerText = `Delivery? = ${this.isDeliveryDone ? 'YES' : 'NO'}`;
+        btn.classList.toggle('bg-rose-600', this.isDeliveryDone);
+        btn.classList.toggle('text-white', this.isDeliveryDone);
+        btn.classList.toggle('text-rose-600', !this.isDeliveryDone);
+    },
+
     // --- Local Work vs Standard Trip Toggle ---
 
     /**
@@ -149,7 +190,7 @@ const APP = {
             orderInput.value = "LOCAL WORK"; orderInput.readOnly = true;
             btn.classList.add('bg-blue-600', 'text-white');
             standardFields.classList.add('hidden'); localFields.classList.remove('hidden');
-            ['pickup_city', 'delivery_city'].forEach(id => document.getElementById(id).required = false);
+            ['pickup_city', 'delivery_city', 'pickup_date', 'delivery_date'].forEach(id => document.getElementById(id).required = false);
             ['checkin_date', 'checkin_time', 'checkout_date', 'checkout_time'].forEach(id => document.getElementById(id).required = true);
             truckField.required = false; trailerField.required = false;
             distanceContainer.classList.add('hidden');
@@ -157,7 +198,7 @@ const APP = {
             orderInput.value = ""; orderInput.readOnly = false;
             btn.classList.remove('bg-blue-600', 'text-white');
             standardFields.classList.remove('hidden'); localFields.classList.add('hidden');
-            ['pickup_city', 'delivery_city'].forEach(id => document.getElementById(id).required = true);
+            ['pickup_city', 'delivery_city', 'pickup_date', 'delivery_date'].forEach(id => document.getElementById(id).required = true);
             ['checkin_date', 'checkin_time', 'checkout_date', 'checkout_time'].forEach(id => document.getElementById(id).required = false);
             truckField.required = true; trailerField.required = true;
             const display = document.getElementById('local-hours-display');
@@ -166,6 +207,10 @@ const APP = {
         }
     },
 
+    /**
+     * Calculates the duration between check-in and check-out for local work.
+     * Updates the hours display UI in real-time.
+     */
     updateLocalHours() {
         const inDate = document.getElementById('checkin_date').value;
         const inTime = document.getElementById('checkin_time').value;
@@ -187,6 +232,11 @@ const APP = {
         }
     },
 
+    /**
+     * Orchestrates the final submission of the trip log.
+     * Saves data to trips.json and distance data to miles.json simultaneously.
+     * @param {Event} e - Form submit event.
+     */
     async submit(e) {
         e.preventDefault();
         const btn = document.getElementById('submit-btn');
@@ -198,10 +248,13 @@ const APP = {
 
             let newEntry = {
                 id: crypto.randomUUID(), created_at: new Date().toISOString(),
+                tripMode: this.isLocalWork ? 'local-work' : 'long-haul',
                 truck: document.getElementById('truck').value.toUpperCase(),
                 trailer: document.getElementById('trailer').value.toUpperCase(),
                 tarp: document.querySelector('input[name="tarp_type"]:checked').value,
-                codriver: document.getElementById('co_driver').value || "N/A"
+                codriver: document.getElementById('co_driver').value || "N/A",
+                isPickupDone: this.isPickupDone,
+                isDeliveryDone: this.isDeliveryDone
             };
 
             if (this.isLocalWork) {
@@ -224,7 +277,7 @@ const APP = {
                 }
             }
 
-            // Update local state and push to cloud
+            // Save primary trip data and optional miles sidecar data
             trips.push(newEntry);
             if (!this.isLocalWork && Object.keys(milesMap).length > 0) {
                 await GITHUB.saveFile(this.config.repo, this.milesFile, this.config.token, milesMap, `Miles for: ${newEntry.order}`, milesSha);
@@ -238,6 +291,11 @@ const APP = {
             this.pickupCoords = null;
             this.deliveryCoords = null;
             document.getElementById('miles-estimate-container').classList.add('hidden');
+            
+            // Reset custom toggles
+            if (this.isPickupDone) this.togglePickupStatus();
+            if (this.isDeliveryDone) this.toggleDeliveryStatus();
+            
         } catch (e) { alert("ERROR SAVING"); } finally { btn.disabled = false; btn.innerText = "Submit Log to Cloud"; }
     }
 };

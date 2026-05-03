@@ -1,6 +1,6 @@
 /**
  * EXPENSES: Expense Manager Logic
- * Handles expense logging, filtering, and PDF generation for accounting.
+ * Provides specialized tools for tracking CAD/USD expenses and generating accounting-ready PDF reports.
  */
 const EXPENSES = {
     config: { token: '', repo: '' },
@@ -9,6 +9,9 @@ const EXPENSES = {
     dbFile: 'expenses.json',
     currentLimit: 10,
 
+    /**
+     * Boots the expense module and attempts to sync with the database.
+     */
     init() {
         this.loadSettings();
         UI.applyTheme();
@@ -37,6 +40,9 @@ const EXPENSES = {
         this.refresh();
     },
 
+    /**
+     * Synchronizes current expense data from the cloud.
+     */
     async refresh() {
         UI.updateStatus('testing', 'Syncing...', 'bg-emerald-500');
         try {
@@ -50,6 +56,10 @@ const EXPENSES = {
         }
     },
 
+    /**
+     * Logic to save a new expense entry.
+     * Handles conditional CAD conversion logic for USD transactions.
+     */
     async submit(e) {
         e.preventDefault();
         const btn = document.getElementById('submit-btn');
@@ -109,6 +119,9 @@ const EXPENSES = {
         input.required = isUSD;
     },
 
+    /**
+     * Filters the expense view based on date and description notes.
+     */
     applyFilter() {
         const start = document.getElementById('filter-start').value;
         const end = document.getElementById('filter-end').value;
@@ -133,6 +146,11 @@ const EXPENSES = {
         this.currentLimit = 10;
         this.render(this.filteredItems, this.currentLimit);
     },
+
+    /**
+     * Generates the accounting PDF.
+     * Logic separates CAD and USD expenses into distinct pages for easier bookkeeping.
+     */
     async exportPDF() {
         if (this.filteredItems.length === 0) return alert("No data to export! Filter some entries first.");
         const btn = document.querySelector('button[onclick="EXPENSES.exportPDF()"]');

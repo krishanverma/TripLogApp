@@ -1,13 +1,13 @@
 /**
  * Shared UI Utility
- * Handles theme management and status indicator updates across the application.
+ * Global interface helpers for managing connection state visibility and visual themes.
  */
 const UI = {
     /**
-     * Updates the status dot and text in the header.
-     * @param {string} type - 'online', 'testing', 'error', 'offline'
-     * @param {string} msg - The message to display
-     * @param {string} onlineColor - Optional custom color class for 'online' status
+     * Provides real-time feedback on the GitHub connection status.
+     * @param {'online'|'testing'|'error'|'offline'} type - State type
+     * @param {string} msg - User-friendly message
+     * @param {string} [onlineColor='bg-blue-500'] - Theme-specific color for the online state
      */
     updateStatus(type, msg, onlineColor = 'bg-blue-500') {
         const dot = document.getElementById('status-dot');

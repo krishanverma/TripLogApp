@@ -1,5 +1,6 @@
 /**
  * Test Engine: Validation Logic
+ * A lightweight, custom-built test runner for unit testing UI and logic without external dependencies.
  */
 const TEST_RUNNER = {
     passed: 0,
@@ -35,6 +36,43 @@ const TEST_RUNNER = {
             APP.updateLocalHours();
             const display = document.getElementById('local-hours-display').innerText;
             return display === "INVALID TIME RANGE";
+        });
+
+        this.assert("APP: Status toggles flip internal state and button labels", () => {
+            const initialPickup = APP.isPickupDone;
+            APP.togglePickupStatus();
+            const afterPickup = APP.isPickupDone;
+            const btnText = document.getElementById('pickup-done-btn').innerText;
+            
+            return initialPickup !== afterPickup && btnText.includes(afterPickup ? 'YES' : 'NO');
+        });
+
+        this.assert("APP: selectSuggestion updates city value and coordinates", () => {
+            APP.selectSuggestion('pickup_city', 'pickup-suggestions', 'Winnipeg, MB', -97.13, 49.89);
+            const val = document.getElementById('pickup_city').value;
+            const coords = APP.pickupCoords;
+            return val === 'Winnipeg, MB' && coords[0] === -97.13 && coords[1] === 49.89;
+        });
+
+        this.assert("APP: Typing in city field clears existing coordinates", () => {
+            APP.pickupCoords = [-97.13, 49.89];
+            APP.fetchSuggestions('pickup_city', 'pickup-suggestions');
+            return APP.pickupCoords === null;
+        });
+
+        this.assert("APP: toggleLocalWork updates field validation requirements", () => {
+            // Ensure we start from a clean standard state
+            if (APP.isLocalWork) APP.toggleLocalWork();
+            const standardRequired = document.getElementById('pickup_city').required;
+            const standardDateRequired = document.getElementById('pickup_date').required;
+            
+            APP.toggleLocalWork(); // Switch to local
+            const localRequired = document.getElementById('pickup_city').required;
+            const localDateRequired = document.getElementById('pickup_date').required;
+            const checkinRequired = document.getElementById('checkin_date').required;
+            
+            APP.toggleLocalWork(); // Reset
+            return standardRequired === true && standardDateRequired === true && localRequired === false && localDateRequired === false && checkinRequired === true;
         });
 
         this.header("GitHub Services");
@@ -124,7 +162,9 @@ const TEST_RUNNER = {
     },
 
     /**
-     * Synchronous Assertion
+     * Executes a synchronous test.
+     * @param {string} name - Test description
+     * @param {Function} fn - Logic to assert (must return boolean)
      */
     assert(name, fn) {
         try {
@@ -138,7 +178,9 @@ const TEST_RUNNER = {
     },
 
     /**
-     * Asynchronous Assertion
+     * Executes an asynchronous test.
+     * @param {string} name - Test description
+     * @param {Function} fn - Async logic to assert
      */
     async assertAsync(name, fn) {
         try {
@@ -151,6 +193,7 @@ const TEST_RUNNER = {
         }
     },
 
+    /** Adds a themed header to the results list for organization */
     header(name) {
         const container = document.getElementById('results');
         const h = document.createElement('div');
@@ -159,6 +202,7 @@ const TEST_RUNNER = {
         container.appendChild(h);
     },
 
+    /** Logs a single pass/fail result to the DOM */
     log(name, success, error = "") {
         const container = document.getElementById('results');
         const status = success ? "PASS" : "FAIL";
@@ -173,6 +217,7 @@ const TEST_RUNNER = {
         container.appendChild(entry);
     },
 
+    /** Updates the overall tally and console log summary */
     updateSummary() {
         document.getElementById('pass-count').innerText = this.passed;
         document.getElementById('fail-count').innerText = this.failed;

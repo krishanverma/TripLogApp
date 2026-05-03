@@ -30,7 +30,9 @@ const LOGGING_TEST = {
 
             // Set temporary test filename to avoid affecting production data
             const originalFile = APP.dbFile;
+            const originalMilesFile = APP.milesFile;
             APP.dbFile = 'test_trips.json';
+            APP.milesFile = 'test_miles.json';
 
             // Mock alert to prevent blocking the test
             const originalAlert = window.alert;
@@ -49,11 +51,13 @@ const LOGGING_TEST = {
                 
                 // Cleanup
                 APP.dbFile = originalFile;
+                APP.milesFile = originalMilesFile;
                 window.alert = originalAlert;
                 
                 return success;
             } catch (e) {
                 APP.dbFile = originalFile;
+                APP.milesFile = originalMilesFile;
                 window.alert = originalAlert;
                 throw e;
             }

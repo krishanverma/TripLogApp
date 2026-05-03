@@ -1,6 +1,6 @@
 /**
  * VIEWER: Trip History Logic
- * Handles viewing, filtering, and PDF generation of historical trip logs.
+ * Manages the retrieval, filtering, and professional PDF reporting for trip records.
  */
 const VIEWER = {
     token: '',
@@ -12,6 +12,9 @@ const VIEWER = {
     milesFile: 'miles.json',
     currentLimit: 10,
 
+    /**
+     * Initializes the viewer, applies theme, and fetches initial data.
+     */
     init() {
         this.loadSettings();
         UI.applyTheme();
@@ -24,6 +27,9 @@ const VIEWER = {
         });
     },
 
+    /**
+     * Loads GitHub credentials from localStorage.
+     */
     loadSettings() {
         this.token = localStorage.getItem('tlp_token') || '';
         this.repo = localStorage.getItem('tlp_repo') || '';
@@ -31,6 +37,9 @@ const VIEWER = {
         document.getElementById('cfg-repo').value = this.repo;
     },
 
+    /**
+     * Saves configuration and triggers a data refresh.
+     */
     saveConfig() {
         this.token = document.getElementById('cfg-token').value.trim();
         this.repo = document.getElementById('cfg-repo').value.trim();
@@ -40,6 +49,10 @@ const VIEWER = {
         document.getElementById('config-panel').open = false;
     },
 
+    /**
+     * Fetches data from GitHub.
+     * Uses Promise.all to fetch the primary log and the miles metadata in parallel.
+     */
     async refresh() {
         if(!this.token || !this.repo) {
             UI.updateStatus('offline', 'Setup Required');
@@ -69,6 +82,9 @@ const VIEWER = {
         }
     },
 
+    /**
+     * Filters the trip list based on date range and text search (Order/Truck).
+     */
     applyFilter() {
         const start = document.getElementById('filter-start').value;
         const end = document.getElementById('filter-end').value;
@@ -90,6 +106,9 @@ const VIEWER = {
         this.render(this.filteredItems, this.currentLimit);
     },
 
+    /**
+     * Resets all filters and shows the full dataset.
+     */
     clearFilter() {
         document.getElementById('filter-start').value = '';
         document.getElementById('filter-end').value = '';
@@ -101,6 +120,7 @@ const VIEWER = {
 
     /**
      * Removes an entry from the database.
+     * Performs cleanup in both trips.json and miles.json.
      */
     async deleteEntry(id) {
         if (!confirm("Are you sure you want to delete this trip log?")) return;
@@ -133,6 +153,10 @@ const VIEWER = {
 
     // --- PDF Generation Logic ---
 
+    /**
+     * Generates a professional PDF Fleet Report.
+     * Includes custom font embedding, automated tables, and "Office Use Only" sections.
+     */
     async exportPDF() {
         if (this.filteredItems.length === 0) return alert("No data to export");
         
@@ -286,6 +310,11 @@ const VIEWER = {
 
     // --- UI Rendering ---
 
+    /**
+     * Renders the trip history table to the DOM.
+     * @param {Array} items - The filtered list of trips to display.
+     * @param {number} limit - How many items to show initially.
+     */
     render(items, limit = items.length) {
         const list = document.getElementById('history-list');
         const displayItems = items.slice(0, limit);
@@ -319,14 +348,22 @@ const VIEWER = {
                     const miles = this.milesData[t.id] ? `${this.milesData[t.id]} mi` : '-';
                     return `
                 <tr class="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="p-2 sm:p-3 text-sm font-bold text-blue-600">${t.order}</td>
+                    <td class="p-2 sm:p-3 text-sm font-bold text-blue-600">
+                        ${t.order}
+                    </td>
                     <td class="p-2 sm:p-3 text-sm">
                         <div class="font-bold">${t.pDate}</div>
-                        <div class="text-[10px] text-slate-600 dark:text-slate-400">${t.pCity}</div>
+                        <div class="text-[10px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                            ${t.pCity}
+                            ${t.isPickupDone ? '<svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : ''}
+                        </div>
                     </td>
                     <td class="p-2 sm:p-3 text-sm">
                         <div class="font-bold text-rose-600">${t.dDate}</div>
-                        <div class="text-[10px] text-slate-600 dark:text-slate-400">${t.dCity}</div>
+                        <div class="text-[10px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                            ${t.dCity}
+                            ${t.isDeliveryDone ? '<svg class="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : ''}
+                        </div>
                     </td>
                     <td class="p-2 sm:p-3 text-sm font-mono font-bold">${t.truck}</td>
                     <td class="p-2 sm:p-3 text-sm font-mono opacity-60">${t.trailer}</td>

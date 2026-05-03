@@ -37,7 +37,16 @@
             <input id="checkout_date" value="2023-10-01">
             <input id="checkout_time" value="12:30">
             <div id="local-hours-display"></div>
-            
+            <button id="local-work-btn"></button>
+            <div id="standard-trip-fields"></div>
+            <div id="local-work-fields" class="hidden"></div>
+            <div id="miles-estimate-container" class="hidden"></div>
+            <div id="estimated-miles">0 MILES</div>
+            <button id="pickup-done-btn">Pickup? = No</button>
+            <button id="delivery-done-btn">Delivery? = No</button>
+            <div id="pickup-suggestions" class="hidden"></div>
+            <div id="delivery-suggestions" class="hidden"></div>
+
             <input id="filter-start"><input id="filter-end"><input id="filter-search">
             <div id="expense-list"></div>
             <div id="history-list"></div>
@@ -58,12 +67,12 @@
                 <input id="exp_note">
             </form>
             <input id="order_number" value="TEST-ORDER-123">
-            <input id="pickup_date" value="2023-11-01">
-            <input id="pickup_city" value="Winnipeg, MB">
-            <input id="delivery_date" value="2023-11-02">
-            <input id="delivery_city" value="Toronto, ON">
-            <input id="truck" value="UNIT-01">
-            <input id="trailer" value="UNIT-53">
+            <input id="pickup_date" value="2023-11-01" required>
+            <input id="pickup_city" value="Winnipeg, MB" required>
+            <input id="delivery_date" value="2023-11-02" required>
+            <input id="delivery_city" value="Toronto, ON" required>
+            <input id="truck" value="UNIT-01" required>
+            <input id="trailer" value="UNIT-53" required>
             <input type="radio" name="tarp_type" value="None">
             <input type="radio" name="tarp_type" value="Steel" checked>
             <input type="radio" name="tarp_type" value="Lumber">
