@@ -9,6 +9,23 @@
     <script>tailwind.config = { darkMode: 'class' }</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVgLC_yNrotuusroerl4OHAndVd_z7qSc",
+            authDomain: "trucktriplog.firebaseapp.com",
+            projectId: "trucktriplog",
+            storageBucket: "trucktriplog.firebasestorage.app",
+            messagingSenderId: "935555779677",
+            appId: "1:935555779677:web:ac9b82ec9889cfd49011b4",
+            measurementId: "G-6F3WTQTQNR"
+        };
+        // Initialize Firebase using the compat SDK
+        firebase.initializeApp(firebaseConfig);
+    </script>
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -51,23 +68,6 @@
                     </button>
                 </div>
             </header>
-
-            <details id="config-panel" class="bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-800 group">
-                <summary
-                    class="p-3 text-sm text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">
-                    Connection Settings</summary>
-                <div class="p-5 space-y-4">
-                    <input type="password" id="cfg-token"
-                        class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none"
-                        placeholder="GitHub Token">
-                    <input type="text" id="cfg-repo"
-                        class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none"
-                        placeholder="User/Repo">
-                    <button onclick="EXPENSES.saveConfig()"
-                        class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg">Verify
-                        Link</button>
-                </div>
-            </details>
 
             <form id="expense-form" class="p-6 space-y-6">
                 <div class="grid grid-cols-2 gap-4">
@@ -168,7 +168,6 @@
         </div>
     </div>
 
-    <script src="github.js"></script>
     <script src="ui-utils.js"></script>
     <script src="expenses.js" defer></script>
 </body>

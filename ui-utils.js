@@ -1,10 +1,10 @@
 /**
  * Shared UI Utility
- * Global interface helpers for managing connection state visibility and visual themes.
+ * Global interface helpers for connection states, visual themes, and security sanitization.
  */
 const UI = {
     /**
-     * Provides real-time feedback on the GitHub connection status.
+     * Provides real-time feedback on the database connection status.
      * @param {'online'|'testing'|'error'|'offline'} type - State type
      * @param {string} msg - User-friendly message
      * @param {string} [onlineColor='bg-blue-500'] - Theme-specific color for the online state
@@ -28,8 +28,7 @@ const UI = {
      * Applies the saved theme from localStorage or system preference.
      */
     applyTheme() {
-        const isDark = localStorage.getItem('theme') === 'dark' || 
-                      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        const isDark = localStorage.getItem('theme') !== 'light';
         document.documentElement.classList.toggle('dark', isDark);
         const icon = document.getElementById('theme-icon');
         if (icon) icon.innerText = isDark ? '☀️' : '🌙';
@@ -43,5 +42,15 @@ const UI = {
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         const icon = document.getElementById('theme-icon');
         if (icon) icon.innerText = isDark ? '☀️' : '🌙';
+    },
+
+    /**
+     * Escapes HTML characters to prevent XSS attacks when rendering user-generated content.
+     * @param {string} str - Raw input string
+     * @returns {string} - Sanitized string
+     */
+    escapeHTML(str) {
+        if (!str) return "";
+        return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
     }
 };

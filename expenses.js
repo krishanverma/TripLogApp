@@ -3,41 +3,25 @@
  * Provides specialized tools for tracking CAD/USD expenses and generating accounting-ready PDF reports.
  */
 const EXPENSES = {
-    config: { token: '', repo: '' },
+    user: null,
+    db: firebase.firestore(),
     items: [],
     filteredItems: [],
-    dbFile: 'expenses.json',
     currentLimit: 10,
 
     /**
      * Boots the expense module and attempts to sync with the database.
      */
     init() {
-        this.loadSettings();
         UI.applyTheme();
-        if (this.config.token && this.config.repo) {
-            this.refresh();
-        } else {
-            UI.updateStatus('offline', 'Setup Required', 'bg-emerald-500');
-            document.getElementById('config-panel').open = true;
-        }
-    },
-
-    loadSettings() {
-        this.config.token = localStorage.getItem('tlp_token') || '';
-        this.config.repo = localStorage.getItem('tlp_repo') || '';
-        document.getElementById('cfg-token').value = this.config.token;
-        document.getElementById('cfg-repo').value = this.config.repo;
-    },
-
-    saveConfig() {
-        const token = document.getElementById('cfg-token').value.trim();
-        const repo = document.getElementById('cfg-repo').value.trim();
-        localStorage.setItem('tlp_token', token);
-        localStorage.setItem('tlp_repo', repo);
-        this.config.token = token;
-        this.config.repo = repo;
-        this.refresh();
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                this.user = user;
+                this.refresh();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
     },
 
     /**
@@ -46,13 +30,17 @@ const EXPENSES = {
     async refresh() {
         UI.updateStatus('testing', 'Syncing...', 'bg-emerald-500');
         try {
-            const { content, sha } = await GITHUB.fetchFile(this.config.repo, this.dbFile, this.config.token);
-            this.items = content.reverse();
+            const snapshot = await this.db.collection('expenses')
+                .where('userId', '==', this.user.uid)
+                .get();
+
+            this.items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                .sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.created_at || "").localeCompare(a.created_at || ""));
             this.filteredItems = [...this.items];
             this.render(this.filteredItems, this.currentLimit);
-            UI.updateStatus('online', sha ? 'Database Active' : 'New File Ready', 'bg-emerald-500');
+            UI.updateStatus('online', 'Database Active', 'bg-emerald-500');
         } catch (e) { 
-            UI.updateStatus('error', 'Link Error', 'bg-emerald-500'); 
+            UI.updateStatus('error', 'Storage Error', 'bg-emerald-500'); 
         }
     },
 
@@ -62,15 +50,14 @@ const EXPENSES = {
      */
     async submit(e) {
         e.preventDefault();
+        if (!this.user) return alert("Please login first");
         const btn = document.getElementById('submit-btn');
         btn.disabled = true; btn.innerText = "SAVING...";
         
         try {
-            // Fetch existing data for update
-            const { content: currentExpenses, sha } = await GITHUB.fetchFile(this.config.repo, this.dbFile, this.config.token);
-
             const newEntry = {
-                id: crypto.randomUUID(), created_at: new Date().toISOString(),
+                userId: this.user.uid,
+                created_at: new Date().toISOString(),
                 date: document.getElementById('exp_date').value,
                 amount: parseFloat(document.getElementById('exp_amount').value),
                 currency: document.querySelector('input[name="exp_currency"]:checked').value,
@@ -78,8 +65,7 @@ const EXPENSES = {
                 note: document.getElementById('exp_note').value || "No notes"
             };
 
-            currentExpenses.push(newEntry);
-            await GITHUB.saveFile(this.config.repo, this.dbFile, this.config.token, currentExpenses, `Expense: ${newEntry.note}`, sha);
+            await this.db.collection('expenses').add(newEntry);
             
             document.getElementById('expense-form').reset();
             this.toggleCurrency();
@@ -95,10 +81,7 @@ const EXPENSES = {
         
         UI.updateStatus('testing', 'Deleting...', 'bg-emerald-500');
         try {
-            const { content: currentExpenses, sha } = await GITHUB.fetchFile(this.config.repo, this.dbFile, this.config.token);
-            const updatedExpenses = currentExpenses.filter(t => t.id !== id);
-            
-            await GITHUB.saveFile(this.config.repo, this.dbFile, this.config.token, updatedExpenses, `Delete Expense: ${id}`, sha);
+            await this.db.collection('expenses').doc(id).delete();
             
             alert("Expense Deleted Successfully");
             this.refresh();
@@ -185,7 +168,7 @@ const EXPENSES = {
                 const midLineY = currentY + 35;
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold').text("Name- ", 14, midLineY);
-                doc.setFont('helvetica', 'normal').text("Krishan Verma", 28, midLineY);
+                doc.setFont('helvetica', 'normal').text("Krishan Verma", 28, midLineY); // TODO: Pull from user profile
                 doc.line(28, midLineY + 1, 60, midLineY + 1);
 
                 doc.setFont('helvetica', 'bold').text("Truck- ", 75, midLineY);
@@ -226,9 +209,9 @@ const EXPENSES = {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
                 <div class="flex flex-col">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${t.date}</span>
-                    <span class="font-bold text-sm">${t.note}</span>
-                    <span class="text-[10px] font-bold text-emerald-500 uppercase">${t.currency ? t.currency : ''}</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${UI.escapeHTML(t.date)}</span>
+                    <span class="font-bold text-sm">${UI.escapeHTML(t.note)}</span>
+                    <span class="text-[10px] font-bold text-emerald-500 uppercase">${UI.escapeHTML(t.currency ? t.currency : '')}</span>
                 </div>
             </div>
             <div class="text-right">

@@ -3,82 +3,46 @@
  * Manages the retrieval, filtering, and professional PDF reporting for trip records.
  */
 const VIEWER = {
-    token: '',
-    repo: '',
+    user: null,
+    db: firebase.firestore(),
     items: [],
     filteredItems: [],
-    milesData: {},
-    dbFile: 'trips.json',
-    milesFile: 'miles.json',
     currentLimit: 10,
 
     /**
      * Initializes the viewer, applies theme, and fetches initial data.
      */
     init() {
-        this.loadSettings();
         UI.applyTheme();
-        this.refresh();
-        window.addEventListener('storage', (e) => {
-            if(e.key === 'tlp_token' || e.key === 'tlp_repo') {
-                this.loadSettings();
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                this.user = user;
                 this.refresh();
+            } else {
+                window.location.href = 'index.html';
             }
         });
     },
 
     /**
-     * Loads GitHub credentials from localStorage.
-     */
-    loadSettings() {
-        this.token = localStorage.getItem('tlp_token') || '';
-        this.repo = localStorage.getItem('tlp_repo') || '';
-        document.getElementById('cfg-token').value = this.token;
-        document.getElementById('cfg-repo').value = this.repo;
-    },
-
-    /**
-     * Saves configuration and triggers a data refresh.
-     */
-    saveConfig() {
-        this.token = document.getElementById('cfg-token').value.trim();
-        this.repo = document.getElementById('cfg-repo').value.trim();
-        localStorage.setItem('tlp_token', this.token);
-        localStorage.setItem('tlp_repo', this.repo);
-        this.refresh();
-        document.getElementById('config-panel').open = false;
-    },
-
-    /**
-     * Fetches data from GitHub.
-     * Uses Promise.all to fetch the primary log and the miles metadata in parallel.
+     * Fetches authenticated data from Cloud Firestore.
      */
     async refresh() {
-        if(!this.token || !this.repo) {
-            UI.updateStatus('offline', 'Setup Required');
-            document.getElementById('config-panel').open = true;
-            return;
-        }
         UI.updateStatus('testing', 'Verifying...');
-
         try {
-            // Fetch trips and miles sidecar file simultaneously
-            const [tripsRes, milesRes] = await Promise.all([
-                GITHUB.fetchFile(this.repo, this.dbFile, this.token),
-                GITHUB.fetchFile(this.repo, this.milesFile, this.token)
-            ]);
-            
-            this.items = tripsRes.content.reverse();
-            this.milesData = Array.isArray(milesRes.content) ? {} : milesRes.content;
-            
+            const snapshot = await this.db.collection('trips')
+                .where('userId', '==', this.user.uid)
+                .get();
+
+            this.items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                .sort((a, b) => (b.pDate || "").localeCompare(a.pDate || "") || (b.created_at || "").localeCompare(a.created_at || ""));
             document.getElementById('total-loads-count').innerText = this.items.length;
             this.filteredItems = [...this.items];
             this.render(this.filteredItems, this.currentLimit);
-            
             UI.updateStatus('online', 'Database Active');
-            document.getElementById('config-panel').open = false;
         } catch (e) {
-            UI.updateStatus('error', 'Link Error');
+            console.error(e);
+            UI.updateStatus('error', 'Storage Error');
         }
     },
 
@@ -120,29 +84,13 @@ const VIEWER = {
 
     /**
      * Removes an entry from the database.
-     * Performs cleanup in both trips.json and miles.json.
+     * Performs cleanup in the Firestore trips collection.
      */
     async deleteEntry(id) {
         if (!confirm("Are you sure you want to delete this trip log?")) return;
-        
         UI.updateStatus('testing', 'Deleting...');
         try {
-            // Fetch both files to get latest data and SHAs for the update
-            const [tripsRes, milesRes] = await Promise.all([
-                GITHUB.fetchFile(this.repo, this.dbFile, this.token),
-                GITHUB.fetchFile(this.repo, this.milesFile, this.token)
-            ]);
-
-            const updatedTrips = tripsRes.content.filter(t => t.id !== id);
-            await GITHUB.saveFile(this.repo, this.dbFile, this.token, updatedTrips, `Delete Log: ${id}`, tripsRes.sha);
-
-            // Clean up the miles sidecar file if the ID exists there
-            const milesMap = milesRes.content;
-            if (milesMap && typeof milesMap === 'object' && !Array.isArray(milesMap) && milesMap[id]) {
-                delete milesMap[id];
-                await GITHUB.saveFile(this.repo, this.milesFile, this.token, milesMap, `Delete Miles: ${id}`, milesRes.sha);
-            }
-            
+            await this.db.collection('trips').doc(id).delete();
             alert("Entry Deleted Successfully");
             this.refresh();
         } catch (e) {
@@ -192,7 +140,7 @@ const VIEWER = {
             doc.text('EFL TRANSPORT INC  TEL: 204-416-7460  accounting@eflfreight.com', 30, 15);
 
             doc.text('Driver: ', 14, 25);
-            const dName = 'Krishan Verma';
+            const dName = 'Krishan Verma'; // TODO: Pull from user profile
             const dLabelW = doc.getTextWidth('Driver: ');
             doc.setFont('helvetica', 'normal');
             doc.text(dName, 14 + dLabelW, 25);
@@ -345,33 +293,33 @@ const VIEWER = {
                     const tarpStyle = t.tarp === 'Steel' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40' : 
                                     t.tarp === 'Lumber' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40' : 
                                     'bg-slate-100 dark:bg-slate-800 text-slate-500';
-                    const miles = this.milesData[t.id] ? `${this.milesData[t.id]} mi` : '-';
+                    const miles = t.miles ? `${t.miles} mi` : '-';
                     return `
                 <tr class="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td class="p-2 sm:p-3 text-sm font-bold text-blue-600">
-                        ${t.order}
+                        ${UI.escapeHTML(t.order)}
                     </td>
                     <td class="p-2 sm:p-3 text-sm">
-                        <div class="font-bold">${t.pDate}</div>
+                        <div class="font-bold">${UI.escapeHTML(t.pDate)}</div>
                         <div class="text-[10px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                            ${t.pCity}
+                            ${UI.escapeHTML(t.pCity)}
                             ${t.isPickupDone ? '<svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : ''}
                         </div>
                     </td>
                     <td class="p-2 sm:p-3 text-sm">
-                        <div class="font-bold text-rose-600">${t.dDate}</div>
+                        <div class="font-bold text-rose-600">${UI.escapeHTML(t.dDate)}</div>
                         <div class="text-[10px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                            ${t.dCity}
+                            ${UI.escapeHTML(t.dCity)}
                             ${t.isDeliveryDone ? '<svg class="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : ''}
                         </div>
                     </td>
-                    <td class="p-2 sm:p-3 text-sm font-mono font-bold">${t.truck}</td>
-                    <td class="p-2 sm:p-3 text-sm font-mono opacity-60">${t.trailer}</td>
+                    <td class="p-2 sm:p-3 text-sm font-mono font-bold">${UI.escapeHTML(t.truck)}</td>
+                    <td class="p-2 sm:p-3 text-sm font-mono opacity-60">${UI.escapeHTML(t.trailer)}</td>
                     <td class="p-2 sm:p-3 text-sm">
-                        <span class="px-2 py-1 rounded text-xs font-bold uppercase ${tarpStyle}">${t.tarp}</span>
+                        <span class="px-2 py-1 rounded text-xs font-bold uppercase ${tarpStyle}">${UI.escapeHTML(t.tarp)}</span>
                     </td>
                     <td class="p-2 sm:p-3 text-sm font-bold text-blue-500/80">${miles}</td>
-                    <td class="p-2 sm:p-3 text-sm">${t.codriver || 'N/A'}</td>
+                    <td class="p-2 sm:p-3 text-sm">${UI.escapeHTML(t.codriver || 'N/A')}</td>
                     <td class="p-3 text-right">
                         <button onclick="VIEWER.deleteEntry('${t.id}')" class="text-rose-500 hover:text-rose-700 p-1 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,13 +8,34 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVgLC_yNrotuusroerl4OHAndVd_z7qSc",
+            authDomain: "trucktriplog.firebaseapp.com",
+            projectId: "trucktriplog",
+            storageBucket: "trucktriplog.firebasestorage.app",
+            messagingSenderId: "935555779677",
+            appId: "1:935555779677:web:ac9b82ec9889cfd49011b4",
+            measurementId: "G-6F3WTQTQNR"
+        };
+        // Initialize Firebase using the compat SDK
+        firebase.initializeApp(firebaseConfig);
+    </script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-500">
+
+<body
+    class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-500">
 
     <div class="max-w-2xl mx-auto p-4 md:pt-10">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-            
-            <header class="bg-slate-900 dark:bg-black p-6 flex justify-between items-center border-b border-blue-500/20">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+
+            <header
+                class="bg-slate-900 dark:bg-black p-6 flex justify-between items-center border-b border-blue-500/20">
                 <div>
                     <h1 class="text-2xl font-black tracking-tighter italic uppercase text-blue-500">Add Trip</h1>
                     <div id="status-bar" class="mt-1 flex items-center gap-3">
@@ -22,30 +44,48 @@
                             <span id="status-text" class="text-xs font-bold uppercase text-slate-400">Offline</span>
                         </div>
                         <div class="flex gap-3">
-                            <a href="viewer.html" class="text-xs font-black text-blue-400 uppercase tracking-widest hover:underline">Trip History</a>
-                            <a href="expenses.html" class="text-xs font-black text-emerald-500 uppercase tracking-widest hover:underline">Expenses</a>
+                            <a href="viewer.html"
+                                class="text-xs font-black text-blue-400 uppercase tracking-widest hover:underline">Trip
+                                History</a>
+                            <a href="expenses.html"
+                                class="text-xs font-black text-emerald-500 uppercase tracking-widest hover:underline">Expenses</a>
                         </div>
                     </div>
                 </div>
-                <button onclick="UI.toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 shadow-lg active:scale-90 transition-all">
+                <button onclick="UI.toggleTheme()"
+                    class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 shadow-lg active:scale-90 transition-all">
                     <span id="theme-icon" class="text-lg">🌙</span>
                 </button>
             </header>
 
-            <details id="config-panel" class="bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-800 group">
-                <summary class="p-3 text-sm text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">Connection Settings</summary>
-                <div class="p-5 space-y-4">
-                    <input type="password" id="cfg-token" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="GitHub Token">
-                    <input type="text" id="cfg-repo" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="User/Repo">
-                    <button onclick="APP.saveConfig()" class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg">Verify Link</button>
+            <details id="config-panel" class="bg-slate-50 dark:bg-slate-800/30 border-b dark:border-slate-800 group"
+                open>
+                <summary
+                    class="p-3 text-sm text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">
+                    Account Access</summary>
+                <div id="login-fields" class="p-5 space-y-4">
+                    <input type="email" id="auth-email"
+                        class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none"
+                        placeholder="Email">
+                    <input type="password" id="auth-pass"
+                        class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none"
+                        placeholder="Password">
+                    <button onclick="APP.handleAuth()"
+                        class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest shadow-lg">Login</button>
+                </div>
+                <div id="user-info" class="hidden p-5 flex justify-between items-center">
+                    <span id="user-display" class="text-xs font-bold text-slate-500 italic"></span>
+                    <button onclick="APP.logout()"
+                        class="text-[10px] font-black uppercase text-rose-500 hover:underline">Sign Out</button>
                 </div>
             </details>
-
             <form id="log-form" class="p-6 space-y-6">
                 <div class="border-l-4 border-blue-600 pl-4">
                     <label class="text-sm font-black text-blue-600 uppercase tracking-widest">Order #</label>
-                    <input type="text" id="order_number" required placeholder="Enter Order #" class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-600 outline-none py-2 text-3xl font-black uppercase">
-                    <button type="button" id="local-work-btn" onclick="APP.toggleLocalWork()" class="mt-2 px-4 py-1.5 border-2 border-blue-600 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
+                    <input type="text" id="order_number" required placeholder="Enter Order #"
+                        class="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-600 outline-none py-2 text-3xl font-black uppercase">
+                    <button type="button" id="local-work-btn" onclick="APP.toggleLocalWork()"
+                        class="mt-2 px-4 py-1.5 border-2 border-blue-600 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
                         Local Work
                     </button>
                 </div>
@@ -53,80 +93,130 @@
                 <!-- Local Work Time Dials (Hidden by default) -->
                 <div id="local-work-fields" class="hidden space-y-4 animate-in fade-in duration-300">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+                        <div
+                            class="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
                             <label class="text-sm font-black text-blue-600 uppercase mb-3 block">Check-In</label>
                             <div class="flex flex-col gap-2">
-                                <input type="date" id="checkin_date" oninput="APP.updateLocalHours()" class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm">
-                                <input type="time" id="checkin_time" oninput="APP.updateLocalHours()" class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm">
+                                <input type="date" id="checkin_date" oninput="APP.updateLocalHours()"
+                                    class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm">
+                                <input type="time" id="checkin_time" oninput="APP.updateLocalHours()"
+                                    class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm">
                             </div>
                         </div>
-                        <div class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
+                        <div
+                            class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
                             <label class="text-sm font-black text-emerald-600 uppercase mb-3 block">Check-Out</label>
                             <div class="flex flex-col gap-2">
-                                <input type="date" id="checkout_date" oninput="APP.updateLocalHours()" class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm">
-                                <input type="time" id="checkout_time" oninput="APP.updateLocalHours()" class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm">
+                                <input type="date" id="checkout_date" oninput="APP.updateLocalHours()"
+                                    class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm">
+                                <input type="time" id="checkout_time" oninput="APP.updateLocalHours()"
+                                    class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm">
                             </div>
                         </div>
                     </div>
-                    <div id="local-hours-display" class="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <div id="local-hours-display"
+                        class="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
                         Waiting for time data...
                     </div>
                 </div>
 
                 <!-- Standard Trip Fields -->
                 <div id="standard-trip-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
+                    <div
+                        class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
                         <label class="text-sm font-black text-emerald-600 uppercase mb-3 block">Pickup Details</label>
-                        <input type="date" id="pickup_date" required class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold mb-2 text-sm">
+                        <input type="date" id="pickup_date" required
+                            class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold mb-2 text-sm">
                         <div class="relative">
-                            <input type="text" id="pickup_city" required placeholder="City, State" onblur="setTimeout(() => APP.clearSuggestions('pickup-suggestions'), 200)" oninput="APP.fetchSuggestions('pickup_city', 'pickup-suggestions')" class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm" autocomplete="off">
-                            <div id="pickup-suggestions" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto"></div>
+                            <input type="text" id="pickup_city" required placeholder="City, State"
+                                onblur="setTimeout(() => APP.clearSuggestions('pickup-suggestions'), 200)"
+                                oninput="APP.fetchSuggestions('pickup_city', 'pickup-suggestions')"
+                                class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm"
+                                autocomplete="off">
+                            <div id="pickup-suggestions"
+                                class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                            </div>
                         </div>
-                        <button type="button" id="pickup-done-btn" onclick="APP.togglePickupStatus()" class="mt-3 w-full py-2 border-2 border-emerald-600 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all">
+                        <button type="button" id="pickup-done-btn" onclick="APP.togglePickupStatus()"
+                            class="mt-3 w-full py-2 border-2 border-emerald-600 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all">
                             Pickup? = No
                         </button>
                     </div>
-                    <div class="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30">
+                    <div
+                        class="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30">
                         <label class="text-sm font-black text-rose-600 uppercase mb-3 block">Delivery Details</label>
-                        <input type="date" id="delivery_date" required class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold mb-2 text-sm">
+                        <input type="date" id="delivery_date" required
+                            class="w-full p-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold mb-2 text-sm">
                         <div class="relative">
-                            <input type="text" id="delivery_city" required placeholder="City, State" onblur="setTimeout(() => APP.clearSuggestions('delivery-suggestions'), 200)" oninput="APP.fetchSuggestions('delivery_city', 'delivery-suggestions')" class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm" autocomplete="off">
-                            <div id="delivery-suggestions" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto"></div>
+                            <input type="text" id="delivery_city" required placeholder="City, State"
+                                onblur="setTimeout(() => APP.clearSuggestions('delivery-suggestions'), 200)"
+                                oninput="APP.fetchSuggestions('delivery_city', 'delivery-suggestions')"
+                                class="w-full p-2 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-950 text-sm"
+                                autocomplete="off">
+                            <div id="delivery-suggestions"
+                                class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                            </div>
                         </div>
-                        <button type="button" id="delivery-done-btn" onclick="APP.toggleDeliveryStatus()" class="mt-3 w-full py-2 border-2 border-rose-600 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all">
+                        <button type="button" id="delivery-done-btn" onclick="APP.toggleDeliveryStatus()"
+                            class="mt-3 w-full py-2 border-2 border-rose-600 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all">
                             Delivery? = No
                         </button>
                     </div>
                 </div>
 
                 <!-- Distance Estimate Display -->
-                <div id="miles-estimate-container" class="hidden px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30 flex justify-between items-center">
-                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Estimated Trip Distance</span>
+                <div id="miles-estimate-container"
+                    class="hidden px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30 flex justify-between items-center">
+                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Estimated Trip
+                        Distance</span>
                     <span id="estimated-miles" class="text-lg font-black text-blue-600 italic">0 Miles</span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="truck" required placeholder="Truck ID" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
-                    <input type="text" id="trailer" required placeholder="Trailer #" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
+                    <input type="text" id="truck" required placeholder="Truck ID"
+                        class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
+                    <input type="text" id="trailer" required placeholder="Trailer #"
+                        class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 font-bold text-sm">
                 </div>
 
                 <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
                     <div class="flex justify-between items-center px-4">
-                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="None" checked class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">OFF</div><span class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">None</span></label>
-                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Steel" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">S</div><span class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">Steel</span></label>
-                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio" name="tarp_type" value="Lumber" class="sr-only peer"><div class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">L</div><span class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">Lumber</span></label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio"
+                                name="tarp_type" value="None" checked class="sr-only peer">
+                            <div
+                                class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">
+                                OFF</div><span
+                                class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">None</span>
+                        </label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio"
+                                name="tarp_type" value="Steel" class="sr-only peer">
+                            <div
+                                class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">
+                                S</div><span
+                                class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">Steel</span>
+                        </label>
+                        <label class="flex flex-col items-center gap-1 cursor-pointer"><input type="radio"
+                                name="tarp_type" value="Lumber" class="sr-only peer">
+                            <div
+                                class="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:bg-blue-600 peer-checked:border-blue-500 text-[10px] font-black transition-all">
+                                L</div><span
+                                class="text-[10px] font-bold text-slate-500 peer-checked:text-blue-500 uppercase">Lumber</span>
+                        </label>
                     </div>
                 </div>
 
-                <input type="text" id="co_driver" placeholder="Co-Driver (Optional)" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm">
-                <button type="submit" id="submit-btn" class="w-full bg-blue-600 py-5 rounded-2xl text-white font-black uppercase text-lg italic tracking-tighter shadow-xl hover:bg-blue-500 active:scale-[0.98] transition-all border-b-4 border-blue-800">Submit Log</button>
+                <input type="text" id="co_driver" placeholder="Co-Driver (Optional)"
+                    class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm">
+                <button type="submit" id="submit-btn"
+                    class="w-full bg-blue-600 py-5 rounded-2xl text-white font-black uppercase text-lg italic tracking-tighter shadow-xl hover:bg-blue-500 active:scale-[0.98] transition-all border-b-4 border-blue-800">Submit
+                    Log</button>
             </form>
 
         </div>
     </div>
 
-    <script src="github.js"></script>
     <script src="ui-utils.js"></script>
     <script src="app.js" defer></script>
 </body>
+
 </html>

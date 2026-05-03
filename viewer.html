@@ -8,6 +8,22 @@
     <script>tailwind.config = { darkMode: 'class' }</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVgLC_yNrotuusroerl4OHAndVd_z7qSc",
+            authDomain: "trucktriplog.firebaseapp.com",
+            projectId: "trucktriplog",
+            storageBucket: "trucktriplog.firebasestorage.app",
+            messagingSenderId: "935555779677",
+            appId: "1:935555779677:web:ac9b82ec9889cfd49011b4",
+            measurementId: "G-6F3WTQTQNR"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-500">
@@ -37,15 +53,6 @@
                 </button>
             </div>
         </header>
-
-        <details id="config-panel" class="mb-6 bg-slate-100 dark:bg-slate-900 rounded-2xl border dark:border-slate-800 group overflow-hidden">
-            <summary class="p-3 text-sm text-slate-400 cursor-pointer text-center font-black uppercase tracking-[0.2em] list-none group-open:bg-slate-100 dark:group-open:bg-slate-800">Connection Settings</summary>
-            <div class="p-5 space-y-4">
-                <input type="password" id="cfg-token" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="GitHub Token">
-                <input type="text" id="cfg-repo" class="w-full p-3 border dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-sm outline-none" placeholder="User/Repo">
-                <button onclick="VIEWER.saveConfig()" class="w-full bg-blue-600 py-3 rounded-xl text-white font-black uppercase text-xs tracking-widest active:translate-y-0.5">Verify Link</button>
-            </div>
-        </details>
 
         <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-800 mb-6 space-y-4">
             <div class="flex items-center gap-2 px-1">
@@ -80,7 +87,6 @@
         </div>
     </div>
 
-    <script src="github.js"></script>
     <script src="ui-utils.js"></script>
     <script src="viewer.js" defer></script>
 </body>

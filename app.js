@@ -3,10 +3,9 @@
  * Main controller for the trip logging interface, handling data entry, location geocoding, and distance calculation.
  */
 const APP = {
-    config: { token: '', repo: '' },
+    user: null,
+    db: firebase.firestore(),
     isLocalWork: false,
-    dbFile: 'trips.json',
-    milesFile: 'miles.json',
     pickupCoords: null,
     deliveryCoords: null,
     isPickupDone: false, // UI Toggle state
@@ -21,50 +20,34 @@ const APP = {
      * Boots the application, loads user settings, and verifies the database link.
      */
     init() {
-        this.loadSettings();
         UI.applyTheme();
-        if (this.config.token && this.config.repo) {
-            this.verifyConnection(true);
-        } else {
-            UI.updateStatus('offline', 'Setup Required');
-            document.getElementById('config-panel').open = true;
-        }
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                this.user = user;
+                document.getElementById('login-fields').classList.add('hidden');
+                document.getElementById('user-info').classList.remove('hidden');
+                document.getElementById('user-display').innerText = `Logged in: ${user.email}`;
+                UI.updateStatus('online', 'Connected to Firestore');
+            } else {
+                this.user = null;
+                document.getElementById('login-fields').classList.remove('hidden');
+                document.getElementById('user-info').classList.add('hidden');
+                UI.updateStatus('offline', 'Login Required');
+            }
+        });
     },
 
-    /**
-     * Retrieves GitHub credentials from browser localStorage.
-     */
-    loadSettings() {
-        this.config.token = localStorage.getItem('tlp_token') || '';
-        this.config.repo = localStorage.getItem('tlp_repo') || '';
-        document.getElementById('cfg-token').value = this.config.token;
-        document.getElementById('cfg-repo').value = this.config.repo;
-    },
-
-    /**
-     * Persists user configuration to localStorage and re-verifies the connection.
-     */
-    saveConfig() {
-        const token = document.getElementById('cfg-token').value.trim();
-        const repo = document.getElementById('cfg-repo').value.trim();
-        localStorage.setItem('tlp_token', token);
-        localStorage.setItem('tlp_repo', repo);
-        this.config.token = token;
-        this.config.repo = repo;
-        this.verifyConnection();
-    },
-
-    /**
-     * Checks if the GitHub token and repo path are valid by attempting a fetch.
-     * @param {boolean} silent - If true, doesn't close the config panel automatically.
-     */
-    async verifyConnection(silent = false) {
-        UI.updateStatus('testing', 'Verifying...');
+    async handleAuth() {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-pass').value;
         try {
-            await GITHUB.fetchFile(this.config.repo, this.dbFile, this.config.token);
-            UI.updateStatus('online', 'Database Active');
-            if (!silent) document.getElementById('config-panel').open = false;
-        } catch (e) { UI.updateStatus('error', 'Link Error'); }
+            await firebase.auth().signInWithEmailAndPassword(email, pass);
+        } catch (e) { alert("Access Denied: " + e.message); }
+    },
+
+    async logout() {
+        await firebase.auth().signOut();
+        location.reload();
     },
 
     // --- Location Autocomplete ---
@@ -234,27 +217,26 @@ const APP = {
 
     /**
      * Orchestrates the final submission of the trip log.
-     * Saves data to trips.json and distance data to miles.json simultaneously.
+     * Saves the trip data directly to the Cloud Firestore 'trips' collection.
      * @param {Event} e - Form submit event.
      */
     async submit(e) {
         e.preventDefault();
+        if (!this.user) return alert("Please login first");
         const btn = document.getElementById('submit-btn');
         btn.disabled = true; btn.innerText = "UPLOADING...";
         try {
-            // Fetch both trips and miles data
-            const { content: trips, sha } = await GITHUB.fetchFile(this.config.repo, this.dbFile, this.config.token);
-            let { content: milesMap, sha: milesSha } = await GITHUB.fetchFile(this.config.repo, this.milesFile, this.config.token);
-
             let newEntry = {
-                id: crypto.randomUUID(), created_at: new Date().toISOString(),
+                userId: this.user.uid,
+                created_at: new Date().toISOString(),
                 tripMode: this.isLocalWork ? 'local-work' : 'long-haul',
                 truck: document.getElementById('truck').value.toUpperCase(),
                 trailer: document.getElementById('trailer').value.toUpperCase(),
                 tarp: document.querySelector('input[name="tarp_type"]:checked').value,
                 codriver: document.getElementById('co_driver').value || "N/A",
                 isPickupDone: this.isPickupDone,
-                isDeliveryDone: this.isDeliveryDone
+                isDeliveryDone: this.isDeliveryDone,
+                miles: 0
             };
 
             if (this.isLocalWork) {
@@ -268,25 +250,11 @@ const APP = {
                 newEntry.order = document.getElementById('order_number').value.toUpperCase();
                 newEntry.pDate = document.getElementById('pickup_date').value; newEntry.pCity = document.getElementById('pickup_city').value;
                 newEntry.dDate = document.getElementById('delivery_date').value; newEntry.dCity = document.getElementById('delivery_city').value;
-
-                // Handle estimated miles logging to separate file
                 const estMilesText = document.getElementById('estimated-miles').innerText;
-                if (estMilesText) {
-                    const numericMiles = (estMilesText.match(/\d+/) || ["0"])[0];
-                    if (numericMiles !== "0") {
-                        if (Array.isArray(milesMap)) milesMap = {}; // Initialize if new file
-                        milesMap[newEntry.id] = numericMiles;
-                    }
-                }
+                newEntry.miles = parseInt((estMilesText.match(/\d+/) || ["0"])[0]);
             }
 
-            // Save primary trip data and optional miles sidecar data
-            trips.push(newEntry);
-            if (!this.isLocalWork && Object.keys(milesMap).length > 0) {
-                await GITHUB.saveFile(this.config.repo, this.milesFile, this.config.token, milesMap, `Miles for: ${newEntry.order}`, milesSha);
-            }
-            
-            await GITHUB.saveFile(this.config.repo, this.dbFile, this.config.token, trips, `Log: ${newEntry.order}`, sha);
+            await this.db.collection('trips').add(newEntry);
             
             alert("ENTRY LOGGED"); 
             if (this.isLocalWork) this.toggleLocalWork(); 

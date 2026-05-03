@@ -75,13 +75,6 @@ const TEST_RUNNER = {
             return standardRequired === true && standardDateRequired === true && localRequired === false && localDateRequired === false && checkinRequired === true;
         });
 
-        this.header("GitHub Services");
-
-        await this.assertAsync("GITHUB: fetchFile returns empty array on 404", async () => {
-            const result = await GITHUB.fetchFile('invalid/repo', 'non-existent.json', '');
-            return Array.isArray(result.content) && result.content.length === 0 && result.sha === null;
-        });
-
         this.header("Expense Manager");
 
         this.assert("EXPENSES: Currency toggle updates CAD field visibility", () => {
