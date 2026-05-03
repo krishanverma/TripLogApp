@@ -74,14 +74,6 @@ The **Trip Log App** is a specialized serverless web application designed for lo
 - **Mapping & Routing**: Photon API (Geocoding), OSRM (Routing).
 - **PDF Generation**: `jsPDF` and `jsPDF-AutoTable`.
 
-## Testing Suite
-The application includes a built-in test runner (`tests.js`) and integration tests (`logging-test.js`) that validate:
-- UI theme toggling and local storage persistence.
-- Accuracy of local work hour calculations.
-- Firebase Authentication flows and Firestore connectivity.
-- PDF generation workflows and data filtering logic.
-- Trip mode state transitions and UI input validation (Read-only/Visibility logic).
-
 ---
-*Last Updated: May 2024 (Migrated to Firebase)*
+*Last Updated: May 2024 (Production Ready - Tests Removed)*
 *Author: Gemini Code Assist*
