@@ -53,10 +53,10 @@ const VIEWER = {
         const start = document.getElementById('filter-start').value;
         const end = document.getElementById('filter-end').value;
         const search = document.getElementById('filter-search').value.toUpperCase().trim();
-        
+
         this.filteredItems = this.items.filter(t => {
-            if(start && t.dDate < start) return false;
-            if(end && t.dDate > end) return false;
+            if (start && t.dDate < start) return false;
+            if (end && t.dDate > end) return false;
             
             if(search) {
                 const matchOrder = t.order.toUpperCase().includes(search);
@@ -273,6 +273,17 @@ const VIEWER = {
         }
 
         list.innerHTML = `
+        <div class="flex flex-wrap gap-4 mb-4 px-1">
+            <div class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> Done
+            </div>
+            <div class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg> Extra Pickup
+            </div>
+            <div class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                <svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg> Extra Delivery
+            </div>
+        </div>
         <div class="overflow-x-auto">
         <table class="w-full min-w-[800px] table-auto border-collapse bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <thead>
@@ -284,6 +295,7 @@ const VIEWER = {
                     <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Trailer #</th>
                     <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Tarp</th>
                     <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Miles</th>
+                    <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Trip Pay</th>
                     <th class="p-2 sm:p-3 text-left text-sm font-bold text-slate-700 dark:text-slate-300">Co-Driver</th>
                     <th class="p-3 text-right text-sm font-bold text-slate-700 dark:text-slate-300">Actions</th>
                 </tr>
@@ -294,6 +306,8 @@ const VIEWER = {
                                     t.tarp === 'Lumber' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40' : 
                                     'bg-slate-100 dark:bg-slate-800 text-slate-500';
                     const miles = t.miles ? `${t.miles} mi` : '-';
+                    const tripPay = typeof PAY_MANAGER !== 'undefined' ? PAY_MANAGER.calculateTripPay(t) : 0;
+                    
                     return `
                 <tr class="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td class="p-2 sm:p-3 text-sm font-bold text-blue-600">
@@ -303,14 +317,14 @@ const VIEWER = {
                         <div class="font-bold">${UI.escapeHTML(t.pDate)}</div>
                         <div class="text-[10px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
                             ${UI.escapeHTML(t.pCity)}
-                            ${t.isPickupDone === 'yes' ? '<svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : t.isPickupDone === 'extra' ? '<svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>' : ''}
+                            ${(t.isPickupDone === 'yes' || t.isPickupDone === true) ? '<svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : t.isPickupDone === 'extra' ? '<svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>' : ''}
                         </div>
                     </td>
                     <td class="p-2 sm:p-3 text-sm">
                         <div class="font-bold text-rose-600">${UI.escapeHTML(t.dDate)}</div>
                         <div class="text-[10px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
                             ${UI.escapeHTML(t.dCity)}
-                            ${t.isDeliveryDone === 'yes' ? '<svg class="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : t.isDeliveryDone === 'extra' ? '<svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>' : ''}
+                            ${(t.isDeliveryDone === 'yes' || t.isDeliveryDone === true) ? '<svg class="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : t.isDeliveryDone === 'extra' ? '<svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>' : ''}
                         </div>
                     </td>
                     <td class="p-2 sm:p-3 text-sm font-mono font-bold">${UI.escapeHTML(t.truck)}</td>
@@ -319,6 +333,9 @@ const VIEWER = {
                         <span class="px-2 py-1 rounded text-xs font-bold uppercase ${tarpStyle}">${UI.escapeHTML(t.tarp)}</span>
                     </td>
                     <td class="p-2 sm:p-3 text-sm font-bold text-blue-500/80">${miles}</td>
+                    <td class="p-2 sm:p-3 text-sm font-black text-emerald-600 dark:text-emerald-400">
+                        $${tripPay.toFixed(2)}
+                    </td>
                     <td class="p-2 sm:p-3 text-sm">${UI.escapeHTML(t.codriver || 'N/A')}</td>
                     <td class="p-3 text-right">
                         <button onclick="VIEWER.deleteEntry('${t.id}')" class="text-rose-500 hover:text-rose-700 p-1 transition-colors">

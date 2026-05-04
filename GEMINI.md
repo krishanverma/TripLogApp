@@ -63,6 +63,20 @@ The **Trip Log App** is a specialized serverless web application designed for lo
 | `cadAmount` | Float/Null | Converted amount for USD entries |
 | `note` | String | Description/Reference |
 
+### 3. Collection: `settings`
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `payRates` | Object | Map of compensation rates |
+| ↳ `mileRate` | Number | Pay per mile |
+| ↳ `pickRate` | Number | Standard pickup rate |
+| ↳ `dropRate` | Number | Standard delivery rate |
+| ↳ `mbPickRate` | Number | Manitoba pickup rate |
+| ↳ `mbDropRate` | Number | Manitoba delivery rate |
+| ↳ `extraPickRate` | Number | Additional/Extra pickup rate |
+| ↳ `extraDropRate` | Number | Additional/Extra delivery rate |
+| ↳ `localRate` | Number | Hourly rate for local work |
+| ↳ `tarpRates` | Object | Map for Steel/Lumber/None |
+
 ## Security Model
 - **Single User Access**: Registration is disabled via the application UI. Accounts must be created manually through the Firebase Console to prevent unauthorized sign-ups.
 - **Firestore Security Rules**: Restricted access ensures users can only `read`, `write`, or `delete` documents where `request.auth.uid == resource.data.userId`.
