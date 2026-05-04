@@ -8,8 +8,8 @@ const APP = {
     isLocalWork: false,
     pickupCoords: null,
     deliveryCoords: null,
-    isPickupDone: false, // UI Toggle state
-    isDeliveryDone: false,
+    isPickupDone: 'no', // UI Toggle state: 'no', 'yes', 'extra'
+    isDeliveryDone: 'no',
     /** Mapping for Geocoding API state names to postal abbreviations */
     stateMap: {
         'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'District of Columbia': 'DC', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
@@ -133,12 +133,17 @@ const APP = {
      * Updates both the internal boolean and the button UI.
      */
     togglePickupStatus() {
-        this.isPickupDone = !this.isPickupDone;
+        const states = ['no', 'yes', 'extra'];
+        this.isPickupDone = states[(states.indexOf(this.isPickupDone) + 1) % 3];
+        
         const btn = document.getElementById('pickup-done-btn');
-        btn.innerText = `Pickup? = ${this.isPickupDone ? 'YES' : 'NO'}`;
-        btn.classList.toggle('bg-emerald-600', this.isPickupDone);
-        btn.classList.toggle('text-white', this.isPickupDone);
-        btn.classList.toggle('text-emerald-600', !this.isPickupDone);
+        btn.innerText = `Pickup? = ${this.isPickupDone.toUpperCase()}`;
+        
+        // Update colors based on state
+        btn.className = "mt-3 w-full py-2 border-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all " + 
+            (this.isPickupDone === 'yes' ? 'bg-emerald-600 text-white border-emerald-600' : 
+             this.isPickupDone === 'extra' ? 'bg-blue-600 text-white border-blue-600' : 
+             'text-emerald-600 border-emerald-600');
     },
 
     /**
@@ -146,12 +151,16 @@ const APP = {
      * Updates both the internal boolean and the button UI.
      */
     toggleDeliveryStatus() {
-        this.isDeliveryDone = !this.isDeliveryDone;
+        const states = ['no', 'yes', 'extra'];
+        this.isDeliveryDone = states[(states.indexOf(this.isDeliveryDone) + 1) % 3];
+        
         const btn = document.getElementById('delivery-done-btn');
-        btn.innerText = `Delivery? = ${this.isDeliveryDone ? 'YES' : 'NO'}`;
-        btn.classList.toggle('bg-rose-600', this.isDeliveryDone);
-        btn.classList.toggle('text-white', this.isDeliveryDone);
-        btn.classList.toggle('text-rose-600', !this.isDeliveryDone);
+        btn.innerText = `Delivery? = ${this.isDeliveryDone.toUpperCase()}`;
+        
+        btn.className = "mt-3 w-full py-2 border-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all " + 
+            (this.isDeliveryDone === 'yes' ? 'bg-rose-600 text-white border-rose-600' : 
+             this.isDeliveryDone === 'extra' ? 'bg-amber-600 text-white border-amber-600' : 
+             'text-rose-600 border-rose-600');
     },
 
     // --- Local Work vs Standard Trip Toggle ---
@@ -264,8 +273,15 @@ const APP = {
             document.getElementById('miles-estimate-container').classList.add('hidden');
             
             // Reset custom toggles
-            if (this.isPickupDone) this.togglePickupStatus();
-            if (this.isDeliveryDone) this.toggleDeliveryStatus();
+            this.isPickupDone = 'no';
+            const pBtn = document.getElementById('pickup-done-btn');
+            pBtn.innerText = "Pickup? = NO";
+            pBtn.className = "mt-3 w-full py-2 border-2 border-emerald-600 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all";
+            
+            this.isDeliveryDone = 'no';
+            const dBtn = document.getElementById('delivery-done-btn');
+            dBtn.innerText = "Delivery? = NO";
+            dBtn.className = "mt-3 w-full py-2 border-2 border-rose-600 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all";
             
         } catch (e) { alert("ERROR SAVING"); } finally { btn.disabled = false; btn.innerText = "Submit Log to Cloud"; }
     }

@@ -48,8 +48,8 @@ The **Trip Log App** is a specialized serverless web application designed for lo
 | `dDate` | String | Delivery date (YYYY-MM-DD) |
 | `dCity` | String | Delivery location or "LOCAL" indicator |
 | `codriver` | String | Name or "N/A" |
-| `isPickupDone` | Boolean | True if user confirmed pickup |
-| `isDeliveryDone` | Boolean | True if user confirmed delivery |
+| `isPickupDone` | String | enum: `no`, `yes`, `extra` |
+| `isDeliveryDone` | String | enum: `no`, `yes`, `extra` |
 | `miles` | Number | Calculated or manual mileage |
 
 ### 2. Collection: `expenses`
