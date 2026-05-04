@@ -55,8 +55,8 @@ const VIEWER = {
         const search = document.getElementById('filter-search').value.toUpperCase().trim();
         
         this.filteredItems = this.items.filter(t => {
-            if(start && t.pDate < start) return false;
-            if(end && t.pDate > end) return false;
+            if(start && t.dDate < start) return false;
+            if(end && t.dDate > end) return false;
             
             if(search) {
                 const matchOrder = t.order.toUpperCase().includes(search);
