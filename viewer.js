@@ -7,6 +7,8 @@ const VIEWER = {
     db: firebase.firestore(),
     items: [],
     filteredItems: [],
+    modalEl: null,
+    modalContentEl: null,
     currentLimit: 10,
 
     /**
@@ -14,6 +16,7 @@ const VIEWER = {
      */
     init() {
         UI.applyTheme();
+        this.createModalEl();
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 this.user = user;
@@ -22,6 +25,54 @@ const VIEWER = {
                 window.location.href = 'index.html';
             }
         });
+    },
+
+    /**
+     * Creates the modal structure for pay breakdowns.
+     */
+    createModalEl() {
+        if (document.getElementById('pay-modal')) return;
+        
+        this.modalEl = document.createElement('div');
+        this.modalEl.id = 'pay-modal';
+        this.modalEl.className = 'fixed inset-0 z-[10000] hidden bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300';
+        this.modalEl.onclick = (e) => { if(e.target === this.modalEl) this.hideModal(); };
+        
+        this.modalEl.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-8 relative animate-in zoom-in-95 duration-200">
+                <button onclick="VIEWER.hideModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <div id="modal-content" class="text-xs leading-relaxed text-slate-700 dark:text-slate-300"></div>
+                <button onclick="VIEWER.hideModal()" class="mt-8 w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-blue-500/20 active:scale-95 transition-all">Dismiss</button>
+            </div>
+        `;
+        
+        document.body.appendChild(this.modalEl);
+        this.modalContentEl = document.getElementById('modal-content');
+    },
+
+    /**
+     * Shows the breakdown modal for a specific trip.
+     */
+    showModal(id) {
+        const trip = this.items.find(t => t.id === id);
+        if (!trip || !this.modalEl || !this.modalContentEl) return;
+        
+        const breakdown = typeof PAY_MANAGER !== 'undefined' ? PAY_MANAGER.getPayBreakdown(trip) : 'No data available';
+        this.modalContentEl.innerHTML = breakdown;
+        
+        this.modalEl.classList.remove('hidden');
+        this.modalEl.classList.add('flex');
+    },
+
+    /**
+     * Hides the modal.
+     */
+    hideModal() {
+        if (!this.modalEl) return;
+        this.modalEl.classList.add('hidden');
+        this.modalEl.classList.remove('flex');
     },
 
     /**
@@ -53,11 +104,11 @@ const VIEWER = {
         const start = document.getElementById('filter-start').value;
         const end = document.getElementById('filter-end').value;
         const search = document.getElementById('filter-search').value.toUpperCase().trim();
-
+        
         this.filteredItems = this.items.filter(t => {
             if (start && t.dDate < start) return false;
             if (end && t.dDate > end) return false;
-            
+
             if(search) {
                 const matchOrder = t.order.toUpperCase().includes(search);
                 const matchTruck = t.truck.toUpperCase().includes(search);
@@ -265,6 +316,16 @@ const VIEWER = {
      */
     render(items, limit = items.length) {
         const list = document.getElementById('history-list');
+        
+        // Calculate Stats for the current filtered set
+        const hasPM = typeof PAY_MANAGER !== 'undefined';
+        const totalPay = items.reduce((sum, t) => sum + (hasPM ? PAY_MANAGER.calculateTripPay(t) : 0), 0);
+        
+        // Update UI Stats
+        document.getElementById('total-loads-count').innerText = items.length;
+        const payEl = document.getElementById('total-pay-amount');
+        if (payEl) payEl.innerText = `$${totalPay.toFixed(2)}`;
+
         const displayItems = items.slice(0, limit);
         
         if(!displayItems || displayItems.length === 0) {
@@ -302,39 +363,45 @@ const VIEWER = {
             </thead>
             <tbody>
                 ${displayItems.map(t => {
-                    const tarpStyle = t.tarp === 'Steel' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40' : 
-                                    t.tarp === 'Lumber' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40' : 
-                                    'bg-slate-100 dark:bg-slate-800 text-slate-500';
+                    const tarpStyle = t.tarp === 'Steel' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40' :
+                                      t.tarp === 'Lumber' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40' :
+                                      'bg-slate-100 dark:bg-slate-800 text-slate-500';
+                    
                     const miles = t.miles ? `${t.miles} mi` : '-';
-                    const tripPay = typeof PAY_MANAGER !== 'undefined' ? PAY_MANAGER.calculateTripPay(t) : 0;
+                    const hasPM = typeof PAY_MANAGER !== 'undefined';
+                    const tripPay = hasPM ? PAY_MANAGER.calculateTripPay(t) : 0;
+
+                    const pDoneIcon = (t.isPickupDone === 'yes' || t.isPickupDone === true) 
+                        ? '<svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>'
+                        : t.isPickupDone === 'extra' 
+                        ? '<svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>' : '';
+
+                    const dDoneIcon = (t.isDeliveryDone === 'yes' || t.isDeliveryDone === true)
+                        ? '<svg class="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>'
+                        : t.isDeliveryDone === 'extra'
+                        ? '<svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>' : '';
                     
                     return `
                 <tr class="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="p-2 sm:p-3 text-sm font-bold text-blue-600">
-                        ${UI.escapeHTML(t.order)}
-                    </td>
+                    <td class="p-2 sm:p-3 text-sm font-bold text-blue-600">${UI.escapeHTML(t.order)}</td>
                     <td class="p-2 sm:p-3 text-sm">
                         <div class="font-bold">${UI.escapeHTML(t.pDate)}</div>
                         <div class="text-[10px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                            ${UI.escapeHTML(t.pCity)}
-                            ${(t.isPickupDone === 'yes' || t.isPickupDone === true) ? '<svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : t.isPickupDone === 'extra' ? '<svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>' : ''}
-                        </div>
+                            ${UI.escapeHTML(t.pCity)} ${pDoneIcon}</div>
                     </td>
                     <td class="p-2 sm:p-3 text-sm">
                         <div class="font-bold text-rose-600">${UI.escapeHTML(t.dDate)}</div>
                         <div class="text-[10px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                            ${UI.escapeHTML(t.dCity)}
-                            ${(t.isDeliveryDone === 'yes' || t.isDeliveryDone === true) ? '<svg class="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' : t.isDeliveryDone === 'extra' ? '<svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>' : ''}
-                        </div>
+                            ${UI.escapeHTML(t.dCity)} ${dDoneIcon}</div>
                     </td>
                     <td class="p-2 sm:p-3 text-sm font-mono font-bold">${UI.escapeHTML(t.truck)}</td>
                     <td class="p-2 sm:p-3 text-sm font-mono opacity-60">${UI.escapeHTML(t.trailer)}</td>
-                    <td class="p-2 sm:p-3 text-sm">
-                        <span class="px-2 py-1 rounded text-xs font-bold uppercase ${tarpStyle}">${UI.escapeHTML(t.tarp)}</span>
-                    </td>
+                    <td class="p-2 sm:p-3 text-sm"><span class="px-2 py-1 rounded text-xs font-bold uppercase ${tarpStyle}">${UI.escapeHTML(t.tarp)}</span></td>
                     <td class="p-2 sm:p-3 text-sm font-bold text-blue-500/80">${miles}</td>
-                    <td class="p-2 sm:p-3 text-sm font-black text-emerald-600 dark:text-emerald-400">
-                        $${tripPay.toFixed(2)}
+                    <td class="p-2 sm:p-3 text-sm font-black text-emerald-600 dark:text-emerald-400 cursor-pointer hover:underline decoration-dotted underline-offset-4" onclick="VIEWER.showModal('${t.id}')">
+                        <span>
+                            $${tripPay.toFixed(2)}
+                        </span>
                     </td>
                     <td class="p-2 sm:p-3 text-sm">${UI.escapeHTML(t.codriver || 'N/A')}</td>
                     <td class="p-3 text-right">
